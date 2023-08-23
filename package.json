@@ -4,20 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsnd --respawn -r tsconfig-paths/register --pretty --transpile-only ./src/index.ts",
-    "build": "tsc && tsc-alias"
+    "test": "npm run dev",
+    "dev": "nodemon --inspect -e ts,js --exec tsnd -r tsconfig-paths/register --pretty --transpile-only ./src/index.ts",
+    "start": "node dist/index.js",
+    "dev-old": "tsnd --respawn --inspect -r tsconfig-paths/register --pretty --transpile-only ./src/index.ts",
+    "build": "copy .env .\\dist\\.env && tsc && tsc-alias"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
+    "@types/morgan": "^1.9.5",
     "@types/node": "^20.5.3",
-    "tsconfig-paths": "^4.2.0",
+    "nodemon": "^3.0.1",
     "ts-node-dev": "^2.0.0",
-    "tsc-alias": "^1.8.7"
+    "tsc-alias": "^1.8.7",
+    "tsconfig-paths": "^4.2.0"
   }
 }

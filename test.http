@@ -1,4 +1,10 @@
 @api=http://localhost:3000
-#
-GET {{api}}/ HTTP/1.1
-#
+
+###
+GET {{api}}/
+
+###
+GET {{api}}/news
+
+###
+GET {{api}}/news/Xin chào bạn nhé

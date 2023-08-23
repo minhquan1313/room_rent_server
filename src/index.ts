@@ -1,15 +1,19 @@
-import { user } from "@/controllers/user";
+import route from "@/routes";
+import dotenv from "dotenv";
 import express from "express";
+import morgan from "morgan";
 
 const app = express();
-const port = 3000;
+app.use(morgan("combined"));
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+dotenv.config({ path: "./.env" });
+
+const port = process.env.PORT;
+
+route(app);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port} | http://localhost:${port}`);
 
-  console.log(user);
+  console.log(process.env.PORT);
 });
