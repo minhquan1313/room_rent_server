@@ -1,10 +1,9 @@
-@api=http://localhost:3000
+@home=http://localhost:3000
+@api={{home}}/api/v1
 
+###
+GET {{home}}/
 ###
 GET {{api}}/
-
 ###
-GET {{api}}/news
-
-###
-GET {{api}}/news/Xin chào bạn nhé
+DELETE {{api}}/delete-all
