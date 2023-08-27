@@ -11,7 +11,7 @@ router.get("/", AuthenticateMiddleware, UserController.get);
 router.get("/:userId", CheckUserIdMiddleware, UserController.getSingle);
 
 router.post("/login", UserController.postLogin);
-router.post("/", validateRegisterUser(), UserController.validatePreCreateUser, UserController.post, UserController.postCreateUser);
+router.post("/", validateRegisterUser(), UserController.validatePreCreateUser, UserController.post);
 
 router.patch("/:userId", UserController.patch);
 

@@ -10,8 +10,6 @@ class PhoneService {
 
       return valid;
     } catch (error) {
-      console.log(`🚀 ~ PhoneService ~ isValid ~ error:`, error);
-
       return false;
     }
   }

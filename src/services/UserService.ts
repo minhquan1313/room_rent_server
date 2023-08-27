@@ -20,23 +20,8 @@ export interface UserFormData {
 class UserService {
   async get(params: Record<string, string>) {
     const userDocs = await User.find();
-    let users = [];
-    users = mongooseUtils.toObject(userDocs).map(this.userObject);
 
-    return users;
-  }
-  async getById(id: string) {
-    const item = await User.findById(id);
-
-    if (item === null) return null;
-
-    return this.userObject(mongooseUtils.toObject(item));
-  }
-
-  userObject(u: Record<string, any>) {
-    const { password, ...user } = u;
-
-    return user;
+    return userDocs;
   }
 
   async deleteUser(userId: string) {
@@ -80,9 +65,9 @@ class UserService {
       email: mail,
     });
 
-    const user = this.userObject(mongooseUtils.toObject(_user));
+    // const user = this.userObject(mongooseUtils.toObject(_user));
 
-    return user;
+    return _user;
   }
 }
 

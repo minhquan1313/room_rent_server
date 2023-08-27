@@ -30,11 +30,11 @@ POST {{api}}/users
 content-type: application/json
 
 {
-    "username":"mtb123",
-    "password":"12345",
+    "username":"mtb1234",
+    "password":"123451",
     "first_name":"mtb",
-    "tell":"0123",
-    "region_code":"a"
+    "tell":"+84889456788",
+    "region_code":"vn"
 }
 ### LOGIN
 POST {{api}}/users/login

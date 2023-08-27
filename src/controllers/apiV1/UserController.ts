@@ -1,19 +1,14 @@
 import { errorResponse } from "@/Utils/errorRes";
 import { PhoneNumber } from "@/models/User/PhoneNumber";
+import { User } from "@/models/User/User";
 import PhoneService from "@/services/PhoneService";
 import UserService, { UserFormData } from "@/services/UserService";
 import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
-
+import jwt from "jsonwebtoken";
 // User
 
 class UserController {
-  postCreateUser(req: Request, res: Response) {
-    const { remember } = req.body;
-    if (!remember) return;
-
-    res.cookie("remember", "rememberValue");
-  }
   // /api/v1/users/login
   postLogin(req: Request, res: Response, next: NextFunction) {
     const { username, password, remember } = req.body;
@@ -24,28 +19,64 @@ class UserController {
   async get(req: Request, res: Response, next: NextFunction) {
     const params = req.params;
 
-    const users = await UserService.get(params);
+    const users = (await UserService.get(params)).map((u) => {
+      const { password, ...user } = u.toObject();
+
+      return user;
+    });
+
     res.json(users);
   }
 
   // /api/v1/users/:userId
   async getSingle(req: Request, res: Response, next: NextFunction) {
     const { userId } = req.params;
-    const userDoc = await UserService.getById(userId);
+    const userDoc = await User.findById(userId);
 
-    res.json(userDoc);
+    if (!userDoc) return res.status(404).json(errorResponse("User not found"));
+
+    const { password, ...user } = userDoc!.toObject();
+    res.json(user);
   }
 
   // /api/v1/users/
   async post(req: Request, res: Response, next: NextFunction) {
+    console.log(`🚀 ~ UserController ~ post ~ Inside post`);
+    const { remember } = req.body;
+
     try {
-      const user = await UserService.createUser(req.body);
+      const userDoc = await UserService.createUser(req.body);
+      console.log(`🚀 ~ UserController ~ post ~ userDoc:`, userDoc);
+
+      const { password, ...user } = userDoc.toObject();
+
+      console.log(`🚀 ~ UserController ~ post ~ user:`, user);
+
+      console.log(`🚀 ~ UserController ~ post ~ user:`, user._id.toString());
+
+      if (remember) {
+        console.log(`🚀 ~ UserController ~ post ~ remember:`, remember);
+        console.log(`🚀 ~ UserController ~ post ~ process.env.PRIVATE_JWT_KEY:`, process.env.PRIVATE_JWT_KEY || "");
+
+        const token = jwt.sign(
+          {
+            userId: user._id.toString(),
+          },
+          process.env.PRIVATE_JWT_KEY || "",
+          {
+            expiresIn: "7d",
+          }
+        );
+        console.log(`🚀 ~ UserController ~ post ~ token:`, token);
+
+        (user as any)["token"] = token;
+      }
 
       res.json(user);
 
       next();
     } catch (error) {
-      return res.status(500);
+      return res.status(500).json(errorResponse(error));
     }
   }
 
@@ -56,17 +87,24 @@ class UserController {
   async delete(req: Request, res: Response, next: NextFunction) {}
 
   async validatePreCreateUser(req: Request, res: Response, next: NextFunction) {
+    console.log(`🚀 ~ UserController ~ validatePreCreateUser ~ validatePreCreateUser:`);
+
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(422).json(errorResponse(errors.array()));
       }
 
-      const { tell, region_code }: UserFormData = req.body;
+      const { tell, region_code, username }: UserFormData = req.body;
 
-      const isValid = PhoneService.isValid(tell, region_code);
+      if (await User.findOne({ username })) {
+        return res.status(400).json(errorResponse(`username exist`));
+      }
 
-      if (!isValid) return res.status(400).json(errorResponse());
+      const isValidPhoneNumber = PhoneService.isValid(tell, region_code);
+      console.log(`🚀 ~ UserController ~ validatePreCreateUser ~ tell, region_code:`, tell, region_code);
+
+      if (!isValidPhoneNumber) return res.status(400).json(errorResponse(`invalid phone number`));
 
       const phoneNumber = await PhoneNumber.findOne({
         $or: [
@@ -79,12 +117,12 @@ class UserController {
         ],
       });
       if (phoneNumber) {
-        return res.status(400).json(errorResponse());
+        return res.status(400).json(errorResponse(`phoneNumber`));
       }
 
       next();
     } catch (error) {
-      return res.status(500).json(errorResponse());
+      return res.status(500).json(errorResponse(error));
     }
   }
 }

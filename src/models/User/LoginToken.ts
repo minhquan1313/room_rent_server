@@ -5,6 +5,7 @@ const schema = new Schema(
     user: {
       type: Types.ObjectId,
       required: true,
+      unique: true,
       ref: "User",
     },
     token: {

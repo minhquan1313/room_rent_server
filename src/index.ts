@@ -3,6 +3,7 @@ import db from "@/config/db";
 import route from "@/routes";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
@@ -13,10 +14,12 @@ db.connect().catch(() => {
 });
 preload();
 
+cors;
 const app = express();
 app.use(morgan("combined"));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use(cors());
 
 route(app);
 
