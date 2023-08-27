@@ -2,8 +2,49 @@
 @api={{home}}/api/v1
 
 ###
-GET {{home}}/
+GET {{api}}/get-preload
 ###
-GET {{api}}/
+GET {{api}}/?name=test1
+###
+GET {{api}}/?name=test2
+###
+GET {{api}}/?name=test3
 ###
 DELETE {{api}}/delete-all
+###
+POST {{api}}/post-test
+content-type: application/json
+
+{
+    "name": 123
+}
+###
+GET {{api}}/users
+###
+GET {{api}}/users/64e979f9784a0f04bdb1c3df
+###
+GET {{home}}/
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+###REGISTER
+POST {{api}}/users
+content-type: application/json
+
+{
+    "username":"mtb123",
+    "password":"12345",
+    "first_name":"mtb",
+    "tell":"0123",
+    "region_code":"a"
+}
+### LOGIN
+POST {{api}}/users/login
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+### Lấy tên tỉnh
+GET https://provinces.open-api.vn/api/p/
+
+### Lấy tên quận/huyện - 82 là mã code của tỉnh
+GET https://provinces.open-api.vn/api/p/82?depth=2
+
+### Lấy tên phường - 82 là mã code của quận/huyện
+GET https://provinces.open-api.vn/api/d/815?depth=2

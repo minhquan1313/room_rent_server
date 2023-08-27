@@ -1,6 +1,8 @@
 import preload from "@/Utils/preload";
 import db from "@/config/db";
 import route from "@/routes";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
@@ -13,6 +15,8 @@ preload();
 
 const app = express();
 app.use(morgan("combined"));
+app.use(bodyParser.json());
+app.use(cookieParser());
 
 route(app);
 

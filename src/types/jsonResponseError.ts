@@ -1,4 +1,5 @@
-export type jsonResponseError = {
-  message: string;
-  failed: true;
+export type jsonResponse = {
+  success: boolean;
+  error?: any[];
+  code: number;
 };
