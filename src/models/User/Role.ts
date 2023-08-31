@@ -1,5 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
+export type TRole = "admin" | "admin_lvl_2" | "user" | "owner";
+
 const schema = new Schema(
   {
     title: {
@@ -16,6 +18,9 @@ const schema = new Schema(
     statics: {
       getRoleAdmin() {
         return this.findOne({ title: "admin" });
+      },
+      getRoleAdmin2() {
+        return this.findOne({ title: "admin_lvl_2" });
       },
       getRoleUser() {
         return this.findOne({ title: "user" });
@@ -37,6 +42,10 @@ async function autoCreateRolesOnStart() {
       _id: "64e85781e6da92d58fe95d46",
       title: "admin",
       display_name: "Admin",
+    },
+    {
+      title: "admin_lvl_2",
+      display_name: "Admin cấp 2",
     },
     {
       title: "owner",

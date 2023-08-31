@@ -1,14 +1,34 @@
-import mongoose, { Schema, Types } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export interface IRoom {
+  owner: Types.ObjectId;
+  room_type: Types.ObjectId;
+  name: string;
+  sub_name: string | null;
+  description: string | null;
+  price_per_month: number;
+  usable_area: number | null;
+  number_of_room: number | null;
+  number_of_bedroom: number | null;
+  number_of_bathroom: number | null;
+  number_of_floor: number;
+  updatedAt: Date;
+  createdAt: Date;
+}
+export type TRoomDocument = Document<unknown, {}, IRoom> &
+  IRoom & {
+    _id: Types.ObjectId;
+  };
+
+const schema = new Schema<IRoom>(
   {
     owner: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "User",
     },
     room_type: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "RoomType",
     },
@@ -54,6 +74,13 @@ const schema = new Schema(
     timestamps: true,
   }
 );
+schema.pre("find", function (next) {
+  this.sort({
+    createdAt: -1,
+  });
+
+  next();
+});
 
 const Room = mongoose.model("Room", schema);
 

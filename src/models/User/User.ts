@@ -1,11 +1,32 @@
 import { Email } from "@/models/User/Email";
-import { PhoneNumber } from "@/models/User/PhoneNumber";
-import { Role } from "@/models/User/Role";
-import PhoneService from "@/services/PhoneService";
+import { Gender } from "@/models/User/Gender";
+import { Role, TRole } from "@/models/User/Role";
+import LoginTokenService from "@/services/LoginTokenService";
+import UserService from "@/services/UserService";
 import { check } from "express-validator";
-import mongoose, { Schema, Types } from "mongoose";
+import { Document, Schema, Types, model } from "mongoose";
 
-const schema = new Schema(
+export interface IUser {
+  username: string;
+  password: string;
+  first_name: string;
+  last_name: string | null;
+  image: string | null;
+  owner_banner: string | null;
+  disabled: boolean;
+  gender: Types.ObjectId;
+  role: Types.ObjectId;
+  tel: Types.ObjectId;
+  email: Types.ObjectId | null;
+  updatedAt: Date;
+  createdAt: Date;
+}
+export type TUserDocument = Document<unknown, {}, IUser> &
+  IUser & {
+    _id: Types.ObjectId;
+  };
+
+const schema = new Schema<IUser>(
   {
     username: {
       type: String,
@@ -36,40 +57,85 @@ const schema = new Schema(
       default: null,
       trim: true,
     },
-    role: {
-      type: Types.ObjectId,
-      default: null,
-      ref: "Role",
-    },
     owner_banner: {
       type: String,
       default: null,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+    gender: {
+      type: Schema.Types.ObjectId,
+      ref: "Gender",
+      default: null,
+    },
+    role: {
+      type: Schema.Types.ObjectId,
+      default: null,
+      ref: "Role",
+    },
+
     tel: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       default: null,
       // required: true,
       ref: "PhoneNumber",
     },
     email: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       default: null,
       ref: "Email",
     },
   },
   {
     timestamps: true,
+    // methods: {
+    //   async hasUpdatePermission() {
+    //     const role = this.role.toString();
+    //     const allowedRole = (
+    //       await Role.find({
+    //         $or: [
+    //           {
+    //             title: "admin",
+    //           },
+    //           {
+    //             title: "admin_lvl_2",
+    //           },
+    //         ],
+    //       })
+    //     ).map((r) => r.title);
+
+    //     return allowedRole.includes(role);
+    //   },
+    // },
     statics: {
-      getUsers: () => {},
-      getOwner: () => {},
+      getUsers: async () => {
+        const role = Role.getRoleUser();
+        return await model("User").find({ role });
+      },
+      getOwner: async () => {
+        const role = Role.getRoleOwner();
+        return await model("User").find({ role });
+      },
     },
   }
 );
 
-type x = typeof schema;
-let z: x;
+// function autoPopulate(this: any, next: () => void) {
+//   this.populate("email").populate("tel").populate("role").populate("gender");
+//   next();
+// }
+// schema.pre("findOne", autoPopulate);
+schema.pre("find", function (next) {
+  this.sort({
+    createdAt: -1,
+  });
 
-const User = mongoose.model("User", schema);
+  next();
+});
+
+const User = model("User", schema);
 
 async function createAdminOnStart() {
   const defaultAdminInfo = {
@@ -93,30 +159,34 @@ async function createAdminOnStart() {
     });
   }
 
-  let tel = await PhoneNumber.findOne({ national_number: defaultAdminInfo.tel });
-  if (!tel) {
-    tel = await PhoneService.create(defaultAdminInfo.tel, defaultAdminInfo.telCode);
-  }
-
   let user = await User.findOne({ role: roleAdmin });
+
   if (!user) {
-    user = await User.create({
+    const gender = await Gender.findOne({ title: "male" });
+    if (!gender) throw new Error(`No genders`);
+
+    user = await UserService.createUser({
       username: defaultAdminInfo.username,
       password: defaultAdminInfo.pass,
       first_name: defaultAdminInfo.fn,
       last_name: defaultAdminInfo.ln,
-      role: roleAdmin,
-      email,
-      tel,
+      tell: defaultAdminInfo.tel,
+      region_code: defaultAdminInfo.telCode,
+      gender: gender._id.toString(),
     });
+    const userId = user!._id.toString();
+    await UserService.changeRole(userId, roleAdmin.title as TRole);
+
+    await LoginTokenService.makeToken({ username: defaultAdminInfo.username, userId });
   }
 }
 
 const validateRegisterUser = () => {
   return [
     check("username", "Tên người dùng không được trống").not().isEmpty(),
-    check("username", "Tên người dùng chỉ được là số và chữ").isAlphanumeric(),
+    // check("username", "").isAlphanumeric(),
     check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
+    check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
     check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
     check("first_name", "Tên không được để trống").not().isEmpty(),
     check("tell", "Số điện thoại không được trống").not().isEmpty(),
@@ -124,5 +194,8 @@ const validateRegisterUser = () => {
     // check("email", "Email không hợp lệ").isEmail(),
   ];
 };
+const validateLoginUser = () => {
+  return [check("username", "Tên người dùng không được trống").not().isEmpty(), check("password", "Mật khẩu 6 kí tự trở lên").not().isEmpty()];
+};
 
-export { User, createAdminOnStart, validateRegisterUser };
+export { User, createAdminOnStart, validateLoginUser, validateRegisterUser };

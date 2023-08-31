@@ -1,27 +1,55 @@
 import { errorResponse } from "@/Utils/errorRes";
 import { LoginToken } from "@/models/User/LoginToken";
-import { User } from "@/models/User/User";
+import { Role, TRole } from "@/models/User/Role";
+import { TUserDocument, User } from "@/models/User/User";
+import LoginTokenService from "@/services/LoginTokenService";
 import { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
-export type RequestAuthenticateMiddleware = Request & {
-  authorizedUser?: Awaited<ReturnType<typeof AuthenticateMiddleware>>;
+export type RequestAuthenticate = Request & {
+  user?: TUserDocument;
+  roleTitle?: TRole;
 };
+export async function AuthenticateMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  try {
+    const bearerToken = req.headers.authorization;
+    console.log(`🚀 ~ AuthenticateMiddleware ~ bearerToken:`, bearerToken);
 
-export async function AuthenticateMiddleware(req: RequestAuthenticateMiddleware, res: Response, next: NextFunction) {
-  const { user_token }: { user_token?: string } = req.cookies;
-  console.log("🚀 ~ AuthenticateMiddleware ~ user_token:", user_token);
+    if (!bearerToken) throw new Error(`Unauthorized`);
 
-  if (!user_token) return res.status(401).json(errorResponse("user_token missing"));
+    const [type, token] = bearerToken.split(" ");
+    if (type !== "Bearer") throw new Error(`Unauthorized`);
 
-  const loginToken = await LoginToken.findOne({ token: user_token });
-  if (!loginToken) return res.status(401).json(errorResponse("loginToken missing"));
+    const loginToken = await LoginToken.findOne({ token });
+    console.log(`🚀 ~ AuthenticateMiddleware ~ loginToken:`, loginToken);
 
-  const user = await User.findById(loginToken.user);
-  if (!user) return res.status(404).json(errorResponse("Can't find user"));
+    if (!loginToken || loginToken.user === null) throw new Error(`Unauthorized`);
 
-  // authorized success
-  req.authorizedUser = user;
+    const user = await User.findOne(loginToken.user);
+    console.log(`🚀 ~ AuthenticateMiddleware ~ loginToken.user:`, loginToken.user);
 
-  next();
-  return user;
+    console.log(`🚀 ~ AuthenticateMiddleware ~ user:`, user);
+
+    const now = new Date();
+    if (!user || !user.role || user.disabled || loginToken.expire.getTime() < now.getTime()) {
+      // Token het han|user da bi vo hieu hoa, dang nhap lai
+      await loginToken.deleteOne();
+
+      throw new Error(`Unauthorized`);
+    }
+
+    // extendsTime background
+    LoginTokenService.extendsTime(loginToken.token);
+
+    const role = await Role.findById(user.role);
+
+    // authorized success
+    req.user = user;
+    // if (user.role.toString() === (await Role.getRoleAdmin())?._id.toString()) req.isAdmin = true;
+    req.roleTitle = role?.title as any;
+    next();
+  } catch (error: any) {
+    // "Unauthorized"
+    return res.status(StatusCodes.UNAUTHORIZED).json(errorResponse(error.toString()));
+  }
 }

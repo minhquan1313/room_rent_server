@@ -1,6 +1,7 @@
 import { apiRouter } from "@/routes/api/api";
 import { homeRouter } from "@/routes/home";
 import { Application } from "express";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
 
 function route(app: Application) {
   app.use("/api", apiRouter);
@@ -8,7 +9,7 @@ function route(app: Application) {
   app.get("/", homeRouter);
 
   app.use("*", function (req, res) {
-    res.status(404).send("404 em iu à");
+    res.status(StatusCodes.NOT_FOUND).send(getReasonPhrase(StatusCodes.NOT_FOUND));
   });
 }
 

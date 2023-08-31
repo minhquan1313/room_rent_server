@@ -11,6 +11,10 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    order: {
+      type: Number,
+      default: null,
+    },
   },
   {
     timestamps: true,

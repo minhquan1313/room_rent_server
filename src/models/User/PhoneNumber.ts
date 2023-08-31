@@ -4,11 +4,11 @@ const schema = new Schema(
   {
     region_code: {
       type: String,
-      default: null,
+      required: true,
     },
     country_code: {
       type: Number,
-      default: null,
+      required: true,
     },
     national_number: {
       type: Number,

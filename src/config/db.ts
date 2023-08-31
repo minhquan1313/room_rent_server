@@ -14,7 +14,7 @@ const db = {
         throw new Error(`No DB_URL`);
       }
     } catch (error) {
-      console.log(error);
+      console.log(`🚀 ~ connect ~ error:`, error);
     }
 
     return false;

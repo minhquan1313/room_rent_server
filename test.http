@@ -1,5 +1,6 @@
 @home=http://localhost:3000
 @api={{home}}/api/v1
+@authToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiY3JlYXRlZEF0IjoxNjkzNDU5NjQ4OTE2LCJpYXQiOjE2OTM0NTk2NDh9.RUlgIx1DnTxAu6GZcgGpDqQdbAQasnvtLcbL5NY0teI
 
 ###
 GET {{api}}/get-preload
@@ -10,21 +11,28 @@ GET {{api}}/?name=test2
 ###
 GET {{api}}/?name=test3
 ###
-DELETE {{api}}/delete-all
-###
-POST {{api}}/post-test
-content-type: application/json
-
-{
-    "name": 123
-}
-###
 GET {{api}}/users
+Authorization: Bearer {{authToken}}
+
 ###
 GET {{api}}/users/64e979f9784a0f04bdb1c3df
 ###
 GET {{home}}/
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+###update user
+PATCH {{api}}/users/64f01ad126154781ede2c22c
+content-type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "password":"123321123",
+    "first_name":"hihi243",
+    "last_name":"hi",
+    "tell":"0889379113",
+    "region_code":"vn",
+    "email":"testne2@gmail.com",
+    "disabled":true
+}
 ###REGISTER
 POST {{api}}/users
 content-type: application/json
@@ -38,7 +46,29 @@ content-type: application/json
 }
 ### LOGIN
 POST {{api}}/users/login
-# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+content-type: application/json
+
+{
+    "username":"8751601",
+    "password":"123321123"
+}
+
+### LOGIN2
+POST {{api}}/users/login
+content-type: application/json
+
+{
+    "username":"admin",
+    "password":"1"
+}
+### LOGIN TOKEN
+POST {{api}}/users/login-token
+Authorization: Bearer {{authToken}}
+### DELTE User
+DELETE {{api}}/users/64f024c6c676a415d2c16c57
+Authorization: Bearer {{authToken}}
+
+### -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 ### Lấy tên tỉnh
 GET https://provinces.open-api.vn/api/p/

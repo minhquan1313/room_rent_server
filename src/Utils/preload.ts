@@ -1,5 +1,6 @@
 import { createRoomServicesOnStart } from "@/models/Room/RoomService";
 import { createRoomTypeOnStart } from "@/models/Room/RoomType";
+import { createGenderOnStart } from "@/models/User/Gender";
 import { autoCreateRolesOnStart } from "@/models/User/Role";
 import { createAdminOnStart } from "@/models/User/User";
 import PhoneService from "@/services/PhoneService";
@@ -19,6 +20,7 @@ export default function preload() {
 }
 
 export async function doCreate() {
+  await createGenderOnStart();
   await autoCreateRolesOnStart();
   await createAdminOnStart();
 
