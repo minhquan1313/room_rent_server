@@ -1,8 +1,30 @@
-import mongoose, { Schema } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
 export type TRole = "admin" | "admin_lvl_2" | "user" | "owner";
+export interface IRole {
+  _id: Types.ObjectId;
 
-const schema = new Schema(
+  title: TRole;
+  display_name: string | null;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IRoleMethods {
+  //  methods
+}
+
+interface RoleModel extends Model<IRole, {}, IRoleMethods> {
+  // static methods
+  getRoleAdmin(): Promise<RoleDocument | null>;
+  getRoleAdmin2(): Promise<RoleDocument | null>;
+  getRoleUser(): Promise<RoleDocument | null>;
+  getRoleOwner(): Promise<RoleDocument | null>;
+}
+export type RoleDocument = MongooseDocConvert<IRole, IRoleMethods>;
+
+const schema = new Schema<IRole, RoleModel, IRoleMethods>(
   {
     title: {
       type: String,
@@ -16,22 +38,22 @@ const schema = new Schema(
   },
   {
     statics: {
-      getRoleAdmin() {
-        return this.findOne({ title: "admin" });
+      async getRoleAdmin(): Promise<RoleDocument | null> {
+        return await this.findOne({ title: "admin" });
       },
-      getRoleAdmin2() {
-        return this.findOne({ title: "admin_lvl_2" });
+      async getRoleAdmin2(): Promise<RoleDocument | null> {
+        return await this.findOne({ title: "admin_lvl_2" });
       },
-      getRoleUser() {
-        return this.findOne({ title: "user" });
+      async getRoleUser(): Promise<RoleDocument | null> {
+        return await this.findOne({ title: "user" });
       },
-      getRoleOwner() {
-        return this.findOne({ title: "owner" });
+      async getRoleOwner(): Promise<RoleDocument | null> {
+        return await this.findOne({ title: "owner" });
       },
     },
   }
 );
-const Role = mongoose.model("Role", schema);
+const Role = mongoose.model<IRole, RoleModel>("Role", schema);
 
 async function autoCreateRolesOnStart() {
   const r = await mongoose.model("Role").findOne();

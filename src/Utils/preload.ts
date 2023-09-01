@@ -3,7 +3,6 @@ import { createRoomTypeOnStart } from "@/models/Room/RoomType";
 import { createGenderOnStart } from "@/models/User/Gender";
 import { autoCreateRolesOnStart } from "@/models/User/Role";
 import { createAdminOnStart } from "@/models/User/User";
-import PhoneService from "@/services/PhoneService";
 import mongoose from "mongoose";
 
 export default function preload() {
@@ -22,6 +21,7 @@ export default function preload() {
 export async function doCreate() {
   await createGenderOnStart();
   await autoCreateRolesOnStart();
+
   await createAdminOnStart();
 
   await createRoomTypeOnStart();

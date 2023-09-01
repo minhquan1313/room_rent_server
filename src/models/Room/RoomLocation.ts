@@ -1,9 +1,36 @@
-import mongoose, { Schema, Types } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export interface IRoomLocation {
+  _id: Types.ObjectId;
+
+  room: Types.ObjectId;
+  lat: number;
+  long: number;
+  province: string;
+  province_code: number;
+  district: string;
+  district_code: number;
+  ward: string;
+  ward_code: number;
+  detail_location: string;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IRoomTypeMethods {
+  //  methods
+}
+
+interface RoomTypeModel extends Model<IRoomLocation, {}, IRoomTypeMethods> {
+  // static methods
+}
+export type RoomLocationDocument = MongooseDocConvert<IRoomLocation, IRoomTypeMethods>;
+
+const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
   {
     room: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Room",
     },
@@ -33,15 +60,15 @@ const schema = new Schema(
     },
     ward: {
       type: String,
-      default: null,
+      required: true,
     },
     ward_code: {
       type: Number,
-      default: null,
+      required: true,
     },
     detail_location: {
       type: String,
-      default: null,
+      required: true,
     },
   },
   {
@@ -49,6 +76,6 @@ const schema = new Schema(
   }
 );
 
-const RoomLocation = mongoose.model("RoomLocation", schema);
+const RoomLocation = mongoose.model<IRoomLocation, RoomTypeModel>("RoomLocation", schema);
 
 export { RoomLocation };

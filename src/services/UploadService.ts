@@ -1,26 +1,39 @@
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import { moveFileFs } from "@/Utils/moveFileFs";
-import { userFolder } from "@/index";
+import { userStaticFolder } from "@/index";
 import fs from "fs";
 import path from "path";
 
+export type TUploadFile = {
+  fullPath: string;
+  relativePath: string;
+  srcForDb: string;
+};
+
 class UploadService {
-  async userFileUpload(file: Express.Multer.File, userId: string) {
+  async userAvatarFileUpload(file: Express.Multer.File, userId: string): Promise<TUploadFile> {
+    return await this.fileUpload(file, userStaticFolder, userId, "avatar");
+  }
+  async userRoomImageFileUpload(file: Express.Multer.File, userId: string, roomId: string): Promise<TUploadFile> {
+    return await this.fileUpload(file, userStaticFolder, userId, "room", roomId);
+  }
+  async fileUpload(file: Express.Multer.File, finalPath: string, ...subPath: string[]): Promise<TUploadFile> {
     const [fileType] = file.mimetype.split("/");
 
-    const relativeNewPath = path.join(userId, fileType, file.filename);
-    const newPath = path.join(userFolder, relativeNewPath);
-    createFolderFsSync(path.dirname(newPath));
-    await moveFileFs(file.path, newPath);
+    const relative = path.join(...subPath, fileType, file.filename);
+    const destination = path.join(finalPath, relative);
+
+    createFolderFsSync(path.dirname(destination));
+    await moveFileFs(file.path, destination);
 
     return {
-      fullPath: newPath,
-      relativePath: relativeNewPath,
-      srcForDb: "/" + relativeNewPath.replace(/\\/g, "/"),
+      fullPath: destination,
+      relativePath: relative,
+      srcForDb: "/" + relative.replace(/\\/g, "/"),
     };
   }
   unLinkUserFileSync(filePath: string) {
-    const p = path.join(userFolder, filePath);
+    const p = path.join(userStaticFolder, filePath);
     fs.unlinkSync(p);
   }
 }

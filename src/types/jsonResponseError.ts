@@ -1,5 +1,5 @@
 export type jsonResponse = {
   success: boolean;
-  error?: any[];
+  error: { msg: string }[];
   code: number;
 };

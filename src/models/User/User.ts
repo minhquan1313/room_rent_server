@@ -1,12 +1,17 @@
 import { Email } from "@/models/User/Email";
 import { Gender } from "@/models/User/Gender";
-import { Role, TRole } from "@/models/User/Role";
+import { PhoneNumber } from "@/models/User/PhoneNumber";
+import { Role } from "@/models/User/Role";
 import LoginTokenService from "@/services/LoginTokenService";
+import PhoneService from "@/services/PhoneService";
 import UserService from "@/services/UserService";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
-import { Document, Schema, Types, model } from "mongoose";
+import { Model, Schema, Types, model } from "mongoose";
 
 export interface IUser {
+  _id: Types.ObjectId;
+
   username: string;
   password: string;
   first_name: string;
@@ -16,17 +21,26 @@ export interface IUser {
   disabled: boolean;
   gender: Types.ObjectId;
   role: Types.ObjectId;
-  tel: Types.ObjectId;
+  phone: Types.ObjectId | null;
   email: Types.ObjectId | null;
+
   updatedAt: Date;
   createdAt: Date;
 }
-export type TUserDocument = Document<unknown, {}, IUser> &
-  IUser & {
-    _id: Types.ObjectId;
-  };
+interface IUserMethods {
+  addOrUpdatePhone(tell: string | number, region_code: string): Promise<boolean>;
+  addOrUpdateEmail(email: string): Promise<boolean>;
+}
 
-const schema = new Schema<IUser>(
+interface UserModel extends Model<IUser, {}, IUserMethods> {
+  // static methods
+  getUsers(): Promise<UserDocument[]>;
+  getOwner(): Promise<UserDocument[]>;
+}
+
+export type UserDocument = MongooseDocConvert<IUser, IUserMethods>;
+
+const schema = new Schema<IUser, UserModel, IUserMethods>(
   {
     username: {
       type: String,
@@ -75,8 +89,7 @@ const schema = new Schema<IUser>(
       default: null,
       ref: "Role",
     },
-
-    tel: {
+    phone: {
       type: Schema.Types.ObjectId,
       default: null,
       // required: true,
@@ -90,31 +103,92 @@ const schema = new Schema<IUser>(
   },
   {
     timestamps: true,
-    // methods: {
-    //   async hasUpdatePermission() {
-    //     const role = this.role.toString();
-    //     const allowedRole = (
-    //       await Role.find({
-    //         $or: [
-    //           {
-    //             title: "admin",
-    //           },
-    //           {
-    //             title: "admin_lvl_2",
-    //           },
-    //         ],
-    //       })
-    //     ).map((r) => r.title);
+    methods: {
+      async addOrUpdatePhone(this: UserDocument, tell: string | number, region_code: string): Promise<boolean> {
+        if (this.phone) {
+          // already has a phone number
+          const phone = await PhoneNumber.findById(this.phone);
+          if (!phone) {
+            // phone not in collection
+            await PhoneService.create(this._id, tell, region_code, this.phone.toString());
 
-    //     return allowedRole.includes(role);
-    //   },
-    // },
+            return true;
+          }
+
+          const p = await PhoneService.update(phone.e164_format, tell, region_code);
+          if (!p) return false;
+        } else {
+          const p = await PhoneService.create(this._id, tell, region_code);
+          if (!p) return false;
+
+          this.phone = p._id;
+          await this.save();
+        }
+
+        return true;
+      },
+      async addOrUpdateEmail(this: UserDocument, email: string): Promise<boolean> {
+        if (this.email) {
+          // already has a email
+          const emailDoc = await Email.findById(this.email);
+          if (!emailDoc) {
+            // email not in collection
+            await Email.create({
+              _id: this.email,
+              user: this._id,
+              email,
+            });
+
+            return true;
+          }
+
+          const p = await Email.findOneAndUpdate(
+            {
+              _id: this.email,
+            },
+            {
+              email,
+            }
+          );
+          if (!p) return false;
+        } else {
+          const p = await Email.create({
+            user: this._id,
+            email,
+          });
+          if (!p) return false;
+
+          this.email = p._id;
+          await this.save();
+        }
+
+        return true;
+      },
+      //   async hasUpdatePermission() {
+      //     const role = this.role.toString();
+      //     const allowedRole = (
+      //       await Role.find({
+      //         $or: [
+      //           {
+      //             title: "admin",
+      //           },
+      //           {
+      //             title: "admin_lvl_2",
+      //           },
+      //         ],
+      //       })
+      //     ).map((r) => r.title);
+
+      //     return allowedRole.includes(role);
+      //   },
+    },
     statics: {
-      getUsers: async () => {
+      async getUsers(): Promise<UserDocument[]> {
         const role = Role.getRoleUser();
+
         return await model("User").find({ role });
       },
-      getOwner: async () => {
+      async getOwner(): Promise<UserDocument[]> {
         const role = Role.getRoleOwner();
         return await model("User").find({ role });
       },
@@ -123,19 +197,20 @@ const schema = new Schema<IUser>(
 );
 
 // function autoPopulate(this: any, next: () => void) {
-//   this.populate("email").populate("tel").populate("role").populate("gender");
+//   this.populate("email").populate("phone").populate("role").populate("gender");
 //   next();
 // }
 // schema.pre("findOne", autoPopulate);
-schema.pre("find", function (next) {
-  this.sort({
-    createdAt: -1,
-  });
 
-  next();
-});
+// schema.pre("find", function (next) {
+//   this.sort({
+//     createdAt: -1,
+//   });
 
-const User = model("User", schema);
+//   next();
+// });
+
+const User = model<IUser, UserModel>("User", schema);
 
 async function createAdminOnStart() {
   const defaultAdminInfo = {
@@ -150,14 +225,6 @@ async function createAdminOnStart() {
 
   const roleAdmin = await Role.getRoleAdmin();
   if (!roleAdmin) return;
-
-  let email = await Email.findOne({ email: defaultAdminInfo.email });
-  if (!email) {
-    email = await Email.create({
-      email: defaultAdminInfo.email,
-      verified: true,
-    });
-  }
 
   let user = await User.findOne({ role: roleAdmin });
 
@@ -174,28 +241,50 @@ async function createAdminOnStart() {
       region_code: defaultAdminInfo.telCode,
       gender: gender._id.toString(),
     });
-    const userId = user!._id.toString();
-    await UserService.changeRole(userId, roleAdmin.title as TRole);
 
-    await LoginTokenService.makeToken({ username: defaultAdminInfo.username, userId });
+    if (!(await Email.findOne({ email: defaultAdminInfo.email }))) {
+      user?.addOrUpdateEmail(defaultAdminInfo.email);
+    }
+    const userId = user!._id;
+    await UserService.changeRole(userId, roleAdmin.title);
+
+    // const token = await LoginTokenService.makeToken({ username: defaultAdminInfo.username, userId });
+    const token = await LoginTokenService.makeTokenRaw({
+      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiY3JlYXRlZEF0IjoxNjkzNTQzODYyNTMzLCJpYXQiOjE2OTM1NDM4NjJ9.TVu0YEJ7Ym8d_7C_WHrYA5As4j6g6tb2V5zMp16CEzM",
+      userId,
+    });
+
+    // });
+    console.log(`🚀 ~ createAdminOnStart ~ token:`, token);
   }
 }
 
 const validateRegisterUser = () => {
   return [
     check("username", "Tên người dùng không được trống").not().isEmpty(),
-    // check("username", "").isAlphanumeric(),
     check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
+
+    check("password", "Mật khẩu không được trống").not().isEmpty(),
     check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
+
     check("first_name", "Tên không được để trống").not().isEmpty(),
+
     check("tell", "Số điện thoại không được trống").not().isEmpty(),
     check("region_code", "Thiếu mã vùng").not().isEmpty(),
-    // check("email", "Email không hợp lệ").isEmail(),
+
+    check("email", "Email không hợp lệ").optional().isEmail(),
   ];
 };
 const validateLoginUser = () => {
-  return [check("username", "Tên người dùng không được trống").not().isEmpty(), check("password", "Mật khẩu 6 kí tự trở lên").not().isEmpty()];
+  return [
+    check("username", "Tên người dùng không được trống").not().isEmpty(),
+    check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
+    check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
+
+    check("password", "Mật khẩu không được trống").not().isEmpty(),
+    check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
+  ];
 };
 
 export { User, createAdminOnStart, validateLoginUser, validateRegisterUser };

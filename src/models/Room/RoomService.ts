@@ -1,13 +1,32 @@
-import mongoose, { Schema } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export type TRoomService = "Wifi free" | "Mặt tiền" | "Trung tâm thành phố" | "Nhà trong hẻm" | "An ninh cao" | "Có hầm gửi xe";
+export interface IRoomService {
+  _id: Types.ObjectId;
+
+  title: string;
+  display_name: string | null;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IRoomServiceMethods {
+  //  methods
+}
+
+interface RoomServiceModel extends Model<IRoomService, {}, IRoomServiceMethods> {
+  // static methods
+}
+export type RoomServiceDocument = MongooseDocConvert<IRoomService, IRoomServiceMethods>;
+
+const schema = new Schema<IRoomService, RoomServiceModel, IRoomServiceMethods>(
   {
-    furniture: {
+    title: {
       type: String,
       required: true,
     },
-
-    icon: {
+    display_name: {
       type: String,
       default: null,
     },
@@ -17,33 +36,42 @@ const schema = new Schema(
   }
 );
 
-const RoomService = mongoose.model("RoomService", schema);
+const RoomService = mongoose.model<IRoomService, RoomServiceModel>("RoomService", schema);
 
 async function createRoomServicesOnStart() {
-  const roomService = await RoomService.findOne();
+  if (await RoomService.findOne()) return;
 
-  if (roomService) return;
+  interface ITemp extends Omit<IRoomService, "_id" | "updatedAt" | "createdAt"> {
+    display_name: TRoomService;
+  }
+  const objs: ITemp[] = [
+    {
+      title: "wifi",
+      display_name: "Wifi free",
+    },
+    {
+      title: "mt",
+      display_name: "Mặt tiền",
+    },
+    {
+      title: "center",
+      display_name: "Trung tâm thành phố",
+    },
+    {
+      title: "hood",
+      display_name: "Nhà trong hẻm",
+    },
+    {
+      title: "security",
+      display_name: "An ninh cao",
+    },
+    {
+      title: "parking",
+      display_name: "Có hầm gửi xe",
+    },
+  ];
 
-  await RoomService.insertMany([
-    {
-      furniture: "Wifi free",
-    },
-    {
-      furniture: "Mặt tiền",
-    },
-    {
-      furniture: "Trung tâm thành phố",
-    },
-    {
-      furniture: "Nhà trong hẻm",
-    },
-    {
-      furniture: "An ninh cao",
-    },
-    {
-      furniture: "Có hầm gửi xe",
-    },
-  ]);
+  await RoomService.insertMany(objs);
 }
 
 export { RoomService, createRoomServicesOnStart };

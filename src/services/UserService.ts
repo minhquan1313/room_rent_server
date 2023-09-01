@@ -3,7 +3,8 @@ import { PhoneNumber } from "@/models/User/PhoneNumber";
 import { Role, TRole } from "@/models/User/Role";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
-import PhoneService from "@/services/PhoneService";
+import RoomService from "@/services/RoomService";
+import { Types } from "mongoose";
 
 export interface UserFormData {
   username: string;
@@ -22,7 +23,7 @@ export interface UserFormData {
 
 class UserService {
   async get(query: Record<string, any>) {
-    const userDocs = await User.find({}).populate("email").populate("tel").populate("role").populate("gender");
+    const userDocs = await User.find({}).populate("email").populate("phone").populate("role").populate("gender");
 
     return userDocs;
   }
@@ -33,11 +34,10 @@ class UserService {
       if (!user) return false;
 
       await Email.findByIdAndDelete(user.email);
-      await PhoneNumber.findByIdAndDelete(user.tel);
+      await PhoneNumber.findByIdAndDelete(user.phone);
+      await RoomService.deleteManyByUserId(user._id);
 
       await user.deleteOne();
-
-      // await Rooms
 
       return true;
     } catch (error) {
@@ -47,10 +47,10 @@ class UserService {
     }
   }
 
-  async createUser(formData: UserFormData) {
+  async createUser({ role, email, tell, region_code, password, ...data }: UserFormData) {
     if (!process.env.PRIVATE_JWT_KEY) return null;
 
-    const { role, email, tell, region_code, password, ...data } = formData;
+    // const { role, email, tell, region_code, password, ...data } = formData;
 
     let _role;
 
@@ -64,61 +64,33 @@ class UserService {
         break;
     }
 
-    const phone = await PhoneService.create(tell, region_code);
-
     let mail = undefined;
 
-    if (email) {
-      mail = await Email.create({
-        email,
-      });
-    }
-
     const encodedPassword = LoginTokenService.encodePassword(password);
-
     const user = await User.create({
       ...data,
-      tel: phone,
       role: _role,
       email: mail,
       password: encodedPassword,
     });
-
-    const _user = await User.findOne({ _id: user._id }).populate("email").populate("tel").populate("role").populate("gender");
+    await user.addOrUpdatePhone(tell, region_code);
+    if (email) {
+      await user.addOrUpdateEmail(email);
+    }
+    const _user = await User.findOne({ _id: user._id }).populate("email").populate("phone").populate("role").populate("gender");
 
     return _user;
   }
 
-  async updateUser(userId: string, formData: Partial<UserFormData>) {
+  async updateUser(userId: string, { email, tell, region_code, password, role, ...f }: Partial<UserFormData>) {
     const user = await User.findById(userId);
     if (!user) return null;
 
-    const { email, tell, region_code, password, username, role, ...f } = formData;
+    // const { email, tell, region_code, password, username, role, ...f } = formData;
 
     let obj: any = {
       ...f,
     };
-
-    if (email) {
-      if (!user.email) {
-        const m = await Email.create({
-          email,
-        });
-
-        obj.email = m;
-      } else {
-        const m = await Email.findById(user.email);
-
-        await m?.updateOne({ email });
-      }
-    }
-
-    if (tell && region_code) {
-      const oldPhone = await PhoneService.findOne(user.tel);
-      if (oldPhone) {
-        await PhoneService.update(oldPhone.e164_format!, tell, region_code);
-      }
-    }
 
     if (password) {
       obj.password = LoginTokenService.encodePassword(password);
@@ -126,10 +98,17 @@ class UserService {
 
     await user.updateOne(obj);
 
-    const _user = await User.findOne({ _id: userId }).populate("email").populate("tel").populate("role").populate("gender");
+    if (tell && region_code) {
+      await user.addOrUpdatePhone(tell, region_code);
+    }
+    if (email) {
+      await user.addOrUpdateEmail(email);
+    }
+
+    const _user = await User.findOne({ _id: userId }).populate("email").populate("phone").populate("role").populate("gender");
     return _user;
   }
-  async changeRole(userId: string, role: TRole) {
+  async changeRole(userId: string | Types.ObjectId, role: TRole) {
     const r = await Role.findOne({
       title: role,
     });
@@ -140,7 +119,7 @@ class UserService {
 
     await user.save();
 
-    const _user = await User.findOne({ _id: userId }).populate("email").populate("tel").populate("role").populate("gender");
+    const _user = await User.findOne({ _id: userId }).populate("email").populate("phone").populate("role").populate("gender");
     return _user;
   }
   async getImageOfUser(userId: string) {}

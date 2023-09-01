@@ -5,6 +5,9 @@ import express from "express";
 // /api/v1
 const router = express.Router();
 
+router.use("/test", (req, res) => {
+  res.json(req.body);
+});
 router.use("/users", userV1Router);
 router.use("/rooms", roomV1Router);
 

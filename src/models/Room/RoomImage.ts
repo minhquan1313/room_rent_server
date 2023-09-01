@@ -1,9 +1,29 @@
-import mongoose, { Schema, Types } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export interface IRoomImage {
+  _id: Types.ObjectId;
+
+  room: Types.ObjectId;
+  image: string;
+  order: number | null;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IRoomImageMethods {
+  //  methods
+}
+
+interface RoomImageModel extends Model<IRoomImage, {}, IRoomImageMethods> {
+  // static methods
+}
+export type RoomImageDocument = MongooseDocConvert<IRoomImage, IRoomImageMethods>;
+
+const schema = new Schema<IRoomImage, RoomImageModel, IRoomImageMethods>(
   {
     room: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Room",
     },
@@ -21,6 +41,6 @@ const schema = new Schema(
   }
 );
 
-const RoomImage = mongoose.model("RoomImage", schema);
+const RoomImage = mongoose.model<IRoomImage, RoomImageModel>("RoomImage", schema);
 
 export { RoomImage };

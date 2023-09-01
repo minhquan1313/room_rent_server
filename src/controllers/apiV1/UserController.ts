@@ -19,7 +19,7 @@ class UserController {
       console.log(`🚀 ~ UserController ~ uploadMany ~ files:`, files);
 
       for (const file of files) {
-        const newPath = await UploadService.userFileUpload(file, "123");
+        const newPath = await UploadService.userAvatarFileUpload(file, "123");
         console.log(`🚀 ~ UserController ~ uploadMany ~ newPath:`, newPath);
       }
 
@@ -35,7 +35,7 @@ class UserController {
       if (!file) return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(`Lỗi up ảnh`));
       console.log(`🚀 ~ UserController ~ upload ~ file:`, file);
 
-      const newPath = await UploadService.userFileUpload(file, "123");
+      const newPath = await UploadService.userAvatarFileUpload(file, "123");
       console.log(`🚀 ~ UserController ~ upload ~ newPath:`, newPath);
 
       res.json(`Uploaded`);
@@ -65,7 +65,7 @@ class UserController {
   async postLoginToken(req: Request, res: Response, next: NextFunction) {
     // refresh token
     const { userId } = req as any;
-    const user = await User.findById(userId).populate("email").populate("role").populate("tel");
+    const user = await User.findById(userId).populate("email").populate("role").populate("phone");
     console.log(`🚀 ~ UserController ~ postLoginToken ~ user:`, user);
 
     res.json(user);
@@ -85,7 +85,7 @@ class UserController {
         { password },
       ],
     })
-      .populate("tel")
+      .populate("phone")
       .populate("email")
       .populate("role");
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Invalid username or password`));
@@ -142,7 +142,7 @@ class UserController {
       const { userId } = req.params;
       if (!file) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No file`));
 
-      const newPath = await UploadService.userFileUpload(file, userId);
+      const newPath = await UploadService.userAvatarFileUpload(file, userId);
 
       const src = newPath.srcForDb;
       const user = await UserService.updateUser(userId, { owner_banner: src });
@@ -160,7 +160,7 @@ class UserController {
       const { userId } = req.params;
       if (!file) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No file`));
 
-      const newPath = await UploadService.userFileUpload(file, userId);
+      const newPath = await UploadService.userAvatarFileUpload(file, userId);
 
       const src = newPath.srcForDb;
       const user = await UserService.updateUser(userId, { image: src });
@@ -205,18 +205,14 @@ class UserController {
       }
 
       const isValidPhoneNumber = PhoneService.isValid(tell, region_code);
-      console.log(`🚀 ~ UserController ~ validatePreCreateUser ~ region_code:`, region_code);
-      console.log(`🚀 ~ UserController ~ validatePreCreateUser ~ tell:`, tell);
-
       if (!isValidPhoneNumber) return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`invalid phone number`));
 
-      const phoneNumber = await PhoneService.findOne(tell);
-
-      if (phoneNumber) {
-        return res.status(StatusCodes.CONFLICT).json(errorResponse(`phoneNumber exist`));
+      if (await PhoneService.findOne(tell)) {
+        return res.status(StatusCodes.CONFLICT).json(errorResponse(`phone exist`));
       }
-      if (email) {
-        if (await Email.findOne({ email })) return res.status(StatusCodes.CONFLICT).json(errorResponse(`phoneNumber exist`));
+
+      if (email && (await Email.findOne({ email }))) {
+        return res.status(StatusCodes.CONFLICT).json(errorResponse(`email exist`));
       }
 
       next();

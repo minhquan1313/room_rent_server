@@ -22,10 +22,11 @@ preload();
 
 console.log(process.cwd());
 
-const publicFolder = path.join(__dirname, "static");
-export const userFolder = path.join(process.cwd(), "userDataUpload");
-createFolderFsSync(publicFolder);
-createFolderFsSync(userFolder);
+export const publicStaticServerFolder = path.join(__dirname, "static");
+createFolderFsSync(publicStaticServerFolder);
+
+export const userStaticFolder = path.join(process.cwd(), "userDataUpload");
+createFolderFsSync(userStaticFolder);
 
 const corsOptions = {
   origin: "*",
@@ -36,11 +37,12 @@ const corsOptions = {
 
 const app = express();
 app.use(cors(corsOptions));
-app.use(express.static(publicFolder));
-app.use(express.static(userFolder));
+app.use(express.static(publicStaticServerFolder));
+app.use(express.static(userStaticFolder));
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 route(app);
 

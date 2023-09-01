@@ -1,13 +1,24 @@
 import { LoginToken } from "@/models/User/LoginToken";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 
-export interface IEncodeParam {
+export interface ITokenParam {
   username: string;
   userId?: string;
 }
 
+export interface ITokenRawParam {
+  userId: string | Types.ObjectId;
+  token: string;
+}
+
 class LoginTokenService {
-  async makeToken({ username, userId }: IEncodeParam) {
+  /**
+   *
+   * @param param0 provide userId to auto create in database
+   * @returns
+   */
+  async makeToken({ username, userId }: ITokenParam) {
     if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
 
     const token = jwt.sign(
@@ -17,15 +28,29 @@ class LoginTokenService {
       },
       process.env.PRIVATE_JWT_KEY
     );
-    console.log(`🚀 ~ LoginTokenService ~ makeToken ~ token:`, token);
 
-    console.log(`🚀 ~ LoginTokenService ~ makeToken ~ userId:`, userId);
     if (userId) {
-      const date = new Date();
-      date.setDate(date.getDate() + 30);
+      const date = this.getTokenDefaultExpire();
 
       await LoginToken.create({ token, user: userId, expire: date });
     }
+
+    return token;
+  }
+  async makeTokenRaw({ token, userId }: ITokenRawParam) {
+    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
+
+    // const token = jwt.sign(
+    //   {
+    //     username,
+    //     createdAt: new Date().getTime(),
+    //   },
+    //   process.env.PRIVATE_JWT_KEY
+    // );
+
+    const date = this.getTokenDefaultExpire();
+
+    await LoginToken.create({ token, user: userId, expire: date });
 
     return token;
   }
@@ -50,8 +75,7 @@ class LoginTokenService {
   }
 
   async extendsTime(token: string) {
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
+    const date = this.getTokenDefaultExpire();
 
     await LoginToken.updateOne(
       {
@@ -59,6 +83,14 @@ class LoginTokenService {
       },
       { expire: date }
     );
+  }
+
+  getTokenDefaultExpire() {
+    // default will be 30
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+
+    return date;
   }
 }
 

@@ -28,11 +28,15 @@ class PhoneService {
     return { region_code: code, e164_format, country_code, national_number };
   }
 
-  async create(phone: string | number, region_code: string) {
+  async create(userId: string | Types.ObjectId, phone: string | number, region_code: string, _id?: string) {
     const i = this.createInstance(phone, region_code);
     if (!i) return null;
 
-    const phoneNumber = await PhoneNumber.create(i);
+    const phoneNumber = await PhoneNumber.create({
+      ...i,
+      user: userId,
+      _id,
+    });
 
     return phoneNumber;
   }
