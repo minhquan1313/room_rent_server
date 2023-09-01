@@ -1,6 +1,6 @@
 import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
-import { RoomService, RoomServiceDocument } from "@/models/Room/RoomService";
+import { RoomService, RoomServiceDocument, TRoomService } from "@/models/Room/RoomService";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
@@ -14,6 +14,7 @@ export interface IRoom {
   room_type: Types.ObjectId;
   location: Types.ObjectId | null;
   images: Types.ObjectId[];
+  services: Types.ObjectId[];
 
   name: string;
   sub_name: string | null;
@@ -30,7 +31,7 @@ export interface IRoom {
 }
 interface IRoomMethods {
   getServices(): Promise<RoomServiceDocument[]>;
-  addOrUpdateServices(serviceIds: string[]): Promise<void>;
+  addOrUpdateServices(services: TRoomService[]): Promise<void>;
   addOrUpdateImages(imagesIds: string[]): Promise<void>;
   addOrUpdateLocation(locationDetail: Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt">): Promise<void>;
   getLocation(): Promise<RoomLocationDocument | null>;
@@ -65,6 +66,12 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       {
         type: Schema.Types.ObjectId,
         ref: "RoomImage",
+      },
+    ],
+    services: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "RoomService",
       },
     ],
     name: {
@@ -122,27 +129,35 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
 
         return services_;
       },
-      async addOrUpdateServices(this: RoomDocument, servicesId: string[]): Promise<void> {
-        const currentServicesId = (await RoomWithRoomService.find({ room: this._id })).map((r) => r.service.toString());
+      async addOrUpdateServices(this: RoomDocument, services): Promise<void> {
+        const rwrs = await RoomWithRoomService.find({ room: this._id }).populate("service");
 
-        const servicesToDelete = currentServicesId.filter((id) => !servicesId.includes(id));
-        if (servicesToDelete.length)
+        // id of RoomService, NOT RoomWithRoomService._id
+        const currentServicesId = rwrs.map((r) => {
+          return (r.service as unknown as RoomServiceDocument)._id.toString();
+        });
+
+        // Make sure param _imagesId has real id in collection
+        const servicesId = (
+          await RoomService.find({
+            title: {
+              $in: services,
+            },
+          })
+        ).map((r) => r._id.toString());
+
+        const idsToDelete = currentServicesId.filter((id) => !servicesId.includes(id));
+        if (idsToDelete.length) {
           await RoomWithRoomService.deleteMany({
             room: this._id,
             service: {
-              $in: [servicesToDelete],
+              $in: idsToDelete,
             },
           });
-
-        const servicesToAdd = servicesId.filter((id) => !currentServicesId.includes(id));
-        if (servicesToAdd.length) {
-          const obj = servicesToAdd.map((r) => ({
-            room: this._id,
-            service: r,
-          }));
-
-          await RoomWithRoomService.insertMany(obj);
         }
+
+        this.services = servicesId as any;
+        await this.save();
       },
       async addOrUpdateImages(this: RoomDocument, _imagesId): Promise<void> {
         const currentImagesId = this.images.map((r) => r.toString());
@@ -251,6 +266,9 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           },
           {
             path: "images",
+          },
+          {
+            path: "services",
           },
         ]);
       },

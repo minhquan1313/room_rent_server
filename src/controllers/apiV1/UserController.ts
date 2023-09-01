@@ -6,7 +6,7 @@ import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import PhoneService from "@/services/PhoneService";
 import UploadService from "@/services/UploadService";
-import UserService, { UserFormData } from "@/services/UserService";
+import UserService, { TUserJSON } from "@/services/UserService";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -202,7 +202,7 @@ class UserController {
 
   async validatePreCreateUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { tell, email, region_code, username }: UserFormData = req.body;
+      const { tell, email, region_code, username }: TUserJSON = req.body;
 
       if (await User.findOne({ username })) {
         return res.status(StatusCodes.CONFLICT).json(errorResponse(`username exist`));

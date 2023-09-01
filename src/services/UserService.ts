@@ -7,7 +7,7 @@ import LoginTokenService from "@/services/LoginTokenService";
 import RoomService from "@/services/RoomService";
 import { Types } from "mongoose";
 
-export interface UserFormData {
+export interface TUserJSON {
   username: string;
   password: string;
   first_name: string;
@@ -52,7 +52,7 @@ class UserService {
     }
   }
 
-  async createUser({ role, gender, email, tell, region_code, password, ...data }: UserFormData) {
+  async createUser({ role, gender, email, tell, region_code, password, ...data }: TUserJSON) {
     if (!process.env.PRIVATE_JWT_KEY) return null;
 
     let _role;
@@ -79,11 +79,11 @@ class UserService {
 
     if (email) await user.addOrUpdateEmail(email);
 
-    const _user = (await User.findPopulated({ _id: user._id }))[0];
-    return _user;
+    // const _user = (await User.findPopulated({ _id: user._id }))[0];
+    return user;
   }
 
-  async updateUser(userId: string, { email, tell, gender, region_code, password, role, ...f }: Partial<UserFormData>) {
+  async updateUser(userId: string, { email, tell, gender, region_code, password, role, ...f }: Partial<TUserJSON>) {
     const user = await User.findById(userId);
     if (!user) return null;
 
@@ -97,8 +97,7 @@ class UserService {
 
     if (email) await user.addOrUpdateEmail(email);
 
-    const _user = (await User.findPopulated({ _id: userId }))[0];
-    return _user;
+    return await (await User.findById(userId))?.populateAll();
   }
   async changeRole(userId: string | Types.ObjectId, role: TRole) {
     const r = await Role.findOne({

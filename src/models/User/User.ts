@@ -143,7 +143,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
             return true;
           }
 
-          const p = await Email.findOneAndUpdate(
+          await Email.findOneAndUpdate(
             {
               _id: this.email,
             },
@@ -151,7 +151,6 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
               email,
             }
           );
-          if (!p) return false;
         } else {
           const p = await Email.create({
             user: this._id,
