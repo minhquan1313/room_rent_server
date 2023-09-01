@@ -120,20 +120,24 @@ class UserController {
   }
   // /api/v1/users/role/:userId
   async patchChangeRole(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    const { userId } = req.params;
-    const { role }: { role: TRole } = req.body;
+    try {
+      const { userId } = req.params;
+      const { role }: { role: TRole } = req.body;
 
-    const userDoc = await User.findById(userId).populate("role");
-    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`User to change not found`));
+      const userDoc = await User.findById(userId).populate("role");
+      if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`User to change not found`));
 
-    if ((userDoc.role as any).title === "admin" || role === "admin") {
-      // Changing admin role, or promote someone to be admin
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Changing from or to <admin> role is not allow`));
+      // if ((userDoc.role as any).title === "admin" || role === "admin") {
+      //   // Changing admin role, or promote someone to be admin
+      //   return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Changing from or to <admin> role is not allow`));
+      // }
+
+      const user = await UserService.changeRole(userId, role);
+
+      return res.json(user);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
-
-    const user = await UserService.changeRole(userId, role);
-
-    return res.json(user);
   }
   // /api/v1/users/owner_banner/:userId
   async patchOwnerBanner(req: RequestAuthenticate, res: Response, next: NextFunction) {

@@ -56,12 +56,13 @@ const schema = new Schema<IRole, RoleModel, IRoleMethods>(
 const Role = mongoose.model<IRole, RoleModel>("Role", schema);
 
 async function autoCreateRolesOnStart() {
-  const r = await mongoose.model("Role").findOne();
-  if (r) return;
+  if (await mongoose.model("Role").findOne()) return;
 
-  await Role.insertMany([
+  const obj: (Partial<IRole> & {
+    title: TRole;
+  })[] = [
     {
-      _id: "64e85781e6da92d58fe95d46",
+      _id: "64e85781e6da92d58fe95d46" as any,
       title: "admin",
       display_name: "Admin",
     },
@@ -77,7 +78,9 @@ async function autoCreateRolesOnStart() {
       title: "user",
       display_name: "Người dùng",
     },
-  ]);
+  ];
+
+  await Role.insertMany(obj);
 
   //   mongoose.connection.db
   //     .listCollections()

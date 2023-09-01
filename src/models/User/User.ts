@@ -1,5 +1,4 @@
 import { Email } from "@/models/User/Email";
-import { Gender } from "@/models/User/Gender";
 import { PhoneNumber } from "@/models/User/PhoneNumber";
 import { Role } from "@/models/User/Role";
 import LoginTokenService from "@/services/LoginTokenService";
@@ -10,7 +9,7 @@ import { check } from "express-validator";
 import { Model, Schema, Types, model } from "mongoose";
 
 export interface IUser {
-  _id: Types.ObjectId;
+  _id: Types.ObjectId | string;
 
   username: string;
   password: string;
@@ -30,12 +29,14 @@ export interface IUser {
 interface IUserMethods {
   addOrUpdatePhone(tell: string | number, region_code: string): Promise<boolean>;
   addOrUpdateEmail(email: string): Promise<boolean>;
+  populateAll(): Promise<UserDocument>;
 }
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
   // static methods
   getUsers(): Promise<UserDocument[]>;
   getOwner(): Promise<UserDocument[]>;
+  findPopulated(query: Partial<IUser>): Promise<UserDocument[]>;
 }
 
 export type UserDocument = MongooseDocConvert<IUser, IUserMethods>;
@@ -164,23 +165,22 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
 
         return true;
       },
-      //   async hasUpdatePermission() {
-      //     const role = this.role.toString();
-      //     const allowedRole = (
-      //       await Role.find({
-      //         $or: [
-      //           {
-      //             title: "admin",
-      //           },
-      //           {
-      //             title: "admin_lvl_2",
-      //           },
-      //         ],
-      //       })
-      //     ).map((r) => r.title);
-
-      //     return allowedRole.includes(role);
-      //   },
+      async populateAll(this: UserDocument) {
+        return await this.populate([
+          {
+            path: "role",
+          },
+          {
+            path: "phone",
+          },
+          {
+            path: "email",
+          },
+          {
+            path: "gender",
+          },
+        ]);
+      },
     },
     statics: {
       async getUsers(): Promise<UserDocument[]> {
@@ -191,6 +191,10 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       async getOwner(): Promise<UserDocument[]> {
         const role = Role.getRoleOwner();
         return await model("User").find({ role });
+      },
+
+      async findPopulated(query) {
+        return await model("User").find(query).populate("role").populate("phone").populate("email").populate("gender");
       },
     },
   }
@@ -229,9 +233,6 @@ async function createAdminOnStart() {
   let user = await User.findOne({ role: roleAdmin });
 
   if (!user) {
-    const gender = await Gender.findOne({ title: "male" });
-    if (!gender) throw new Error(`No genders`);
-
     user = await UserService.createUser({
       username: defaultAdminInfo.username,
       password: defaultAdminInfo.pass,
@@ -239,7 +240,7 @@ async function createAdminOnStart() {
       last_name: defaultAdminInfo.ln,
       tell: defaultAdminInfo.tel,
       region_code: defaultAdminInfo.telCode,
-      gender: gender._id.toString(),
+      gender: "male",
     });
 
     if (!(await Email.findOne({ email: defaultAdminInfo.email }))) {

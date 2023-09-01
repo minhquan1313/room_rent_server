@@ -1,6 +1,6 @@
 import UserController from "@/controllers/apiV1/UserController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
-import { PermissionAdminLvl2, PermissionPlaceOwner, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
+import { PermissionAdmin, PermissionPlaceOwner, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
 import UploaderMiddleware from "@/middlewares/UploaderMiddleware";
 import { ValidateMiddleware } from "@/middlewares/ValidateMiddleware";
 import { validateLoginUser, validateRegisterUser } from "@/models/User/User";
@@ -21,7 +21,7 @@ router.post("/", validateRegisterUser(), ValidateMiddleware, UserController.vali
 
 router.patch("/image/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UploaderMiddleware.single("image"), UserController.patchImage);
 router.patch("/owner_banner/:userId", AuthenticateMiddleware, PermissionPlaceOwner, UploaderMiddleware.single("image"), UserController.patchOwnerBanner);
-router.patch("/role/:userId", AuthenticateMiddleware, PermissionAdminLvl2, UserController.patchChangeRole);
+router.patch("/role/:userId", AuthenticateMiddleware, PermissionAdmin, UserController.patchChangeRole);
 router.patch("/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UserController.patch);
 
 router.delete("/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UserController.delete);

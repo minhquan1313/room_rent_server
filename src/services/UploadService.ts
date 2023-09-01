@@ -12,10 +12,10 @@ export type TUploadFile = {
 
 class UploadService {
   async userAvatarFileUpload(file: Express.Multer.File, userId: string): Promise<TUploadFile> {
-    return await this.fileUpload(file, userStaticFolder, userId, "avatar");
+    return await this.fileUpload(file, userStaticFolder, "user", userId, "avatar");
   }
   async userRoomImageFileUpload(file: Express.Multer.File, userId: string, roomId: string): Promise<TUploadFile> {
-    return await this.fileUpload(file, userStaticFolder, userId, "room", roomId);
+    return await this.fileUpload(file, userStaticFolder, "user", userId, "room", roomId);
   }
   async fileUpload(file: Express.Multer.File, finalPath: string, ...subPath: string[]): Promise<TUploadFile> {
     const [fileType] = file.mimetype.split("/");
@@ -32,8 +32,10 @@ class UploadService {
       srcForDb: "/" + relative.replace(/\\/g, "/"),
     };
   }
-  unLinkUserFileSync(filePath: string) {
-    const p = path.join(userStaticFolder, filePath);
+  unLinkUserFileSync(srcForDb: string) {
+    const p = path.join(userStaticFolder, srcForDb);
+    console.log(`🚀 ~ UploadService ~ unLinkUserFileSync ~ p:`, p);
+
     fs.unlinkSync(p);
   }
 }

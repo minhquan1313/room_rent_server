@@ -1,15 +1,19 @@
 import { Room } from "@/models/Room/Room";
 import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
+import { TRoomService } from "@/models/Room/RoomService";
+import { RoomType, TRoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { Types } from "mongoose";
 
 export type TRoomJSON = {
-  room_type: string;
+  owner?: string;
+  room_type: TRoomType;
   name: string;
 
+  services?: TRoomService[];
+
   // id of services
-  services?: string[];
   images?: string[];
 
   location: Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt">;
@@ -25,46 +29,25 @@ export type TRoomJSON = {
 };
 
 class RoomService {
-  async getAll(query: Record<string, any>) {
-    const docs = await Room.find({})
-      //
-      .populate("owner")
-      .populate("room_type")
-      .populate("location");
+  async getAll(query?: Record<string, any>) {
+    const docs = await Room.findPopulated({});
 
     return docs;
   }
-  async create(userId: string | Types.ObjectId, { services, images, location, ...rest }: TRoomJSON) {
+  async create(userId: string | Types.ObjectId, { services, room_type, images, location, ...rest }: TRoomJSON) {
     const room = await Room.create({
       ...rest,
+      room_type: await RoomType.findOne({ title: room_type }),
       owner: userId,
     });
-
-    const x: TRoomJSON = {
-      room_type: "",
-      name: "",
-      location: {
-        lat: 0,
-        long: 0,
-        province: "",
-        province_code: 0,
-        district: "",
-        district_code: 0,
-        ward: "",
-        ward_code: 0,
-        detail_location: "",
-      },
-      price_per_month: 0,
-      number_of_floor: 0,
-    };
 
     if (services) await room.addOrUpdateServices(services);
     if (location) await room.addOrUpdateLocation(location);
     if (images) await room.addOrUpdateImages(images);
 
-    return await Room.findByIdPopulated(room._id);
+    return await room.populateAll();
   }
-  async update(roomId: string | Types.ObjectId, { services, images, location, ...rest }: Partial<TRoomJSON>) {
+  async update(roomId: string | Types.ObjectId, { services, room_type, images, location, ...rest }: Partial<TRoomJSON>) {
     const room = await Room.findById(roomId);
     if (!room) throw new Error(`Can't find room`);
 
@@ -72,9 +55,12 @@ class RoomService {
     if (location) await room.addOrUpdateLocation(location);
     if (images) await room.addOrUpdateImages(images);
 
-    await room.updateOne(rest);
+    await room.updateOne({
+      ...rest,
+      room_type: room_type ? (await RoomType.findOne({ title: room_type })) ?? undefined : undefined,
+    });
 
-    return await Room.findByIdPopulated(room._id);
+    return await (await Room.findById(room._id))?.populateAll();
   }
   async newImageUploaded(roomId: string | Types.ObjectId, src: string) {
     const ri = await RoomImage.create({

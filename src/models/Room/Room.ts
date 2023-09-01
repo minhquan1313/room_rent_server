@@ -2,6 +2,7 @@ import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
 import { RoomService, RoomServiceDocument } from "@/models/Room/RoomService";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
+import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
 import { Model, Schema, Types, model } from "mongoose";
@@ -30,14 +31,16 @@ export interface IRoom {
 interface IRoomMethods {
   getServices(): Promise<RoomServiceDocument[]>;
   addOrUpdateServices(serviceIds: string[]): Promise<void>;
-  addOrUpdateImages(imageIds: string[]): Promise<void>;
+  addOrUpdateImages(imagesIds: string[]): Promise<void>;
   addOrUpdateLocation(locationDetail: Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt">): Promise<void>;
   getLocation(): Promise<RoomLocationDocument | null>;
+
+  populateAll(): Promise<RoomDocument>;
 }
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {
   // static methods
-  findByIdPopulated(id: string | Types.ObjectId): Promise<RoomDocument | null>;
+  findPopulated(query: Partial<IRoom>): Promise<RoomDocument[]>;
 }
 export type RoomDocument = MongooseDocConvert<IRoom, IRoomMethods>;
 
@@ -141,46 +144,54 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           await RoomWithRoomService.insertMany(obj);
         }
       },
-      async addOrUpdateImages(this: RoomDocument, imagesId): Promise<void> {
+      async addOrUpdateImages(this: RoomDocument, _imagesId): Promise<void> {
         const currentImagesId = this.images.map((r) => r.toString());
 
+        // Make sure param _imagesId has real id in collection
+        const imagesId = (
+          await RoomImage.find({
+            _id: {
+              $in: _imagesId,
+            },
+          })
+        ).map((r) => r._id.toString());
+
         const idsToDelete = currentImagesId.filter((id) => !imagesId.includes(id));
-        if (idsToDelete.length)
-          await RoomImage.deleteMany({
-            room: this._id,
-            image: {
-              $in: [idsToDelete],
+        if (idsToDelete.length) {
+          const imagesToDelete = await RoomImage.find({
+            _id: {
+              $in: idsToDelete,
             },
           });
 
-        const idsToAdd = imagesId.filter((id) => !currentImagesId.includes(id));
-        if (idsToAdd.length) {
-          const obj = idsToAdd.map((r) => ({
-            room: this._id,
-            image: r,
-          }));
+          for await (const imageToDelete of imagesToDelete) {
+            await imageToDelete.deleteOne();
+          }
 
-          await RoomImage.insertMany(obj);
+          const sources = imagesToDelete.map((r) => r.image);
+          sources.forEach((src) => {
+            try {
+              UploadService.unLinkUserFileSync(src);
+            } catch (error) {
+              console.log(`🚀 ~ sources.forEach ~ error during deleting room image: `, src);
+            }
+          });
         }
 
-        const imageNotDeleted = currentImagesId.filter((id) => !idsToDelete.includes(id));
-
-        const newImgIds = [...imageNotDeleted, ...idsToAdd];
-
-        this.images = newImgIds as any;
+        this.images = await RoomImage.find({ room: this._id });
         await this.save();
       },
 
       async addOrUpdateLocation(this: RoomDocument, locationDetail) {
         if (this.location) {
-          // already has a email
+          // already has a location
           const locationDoc = await RoomLocation.findById(this.location);
           if (!locationDoc) {
-            // email not in collection
+            // location not in collection
             await RoomLocation.create({
+              ...locationDetail,
               _id: this.location,
               room: this._id,
-              ...locationDetail,
             });
 
             return;
@@ -190,12 +201,16 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
             {
               _id: this.location,
             },
-            locationDetail
+            {
+              ...locationDetail,
+              room: this._id,
+            }
           );
+          console.log(`🚀 ~ addOrUpdateLocation ~ locationDetail:`, locationDetail);
         } else {
           const locationDoc = await RoomLocation.create({
-            room: this._id,
             ...locationDetail,
+            room: this._id,
           });
 
           this.location = locationDoc._id;
@@ -208,10 +223,64 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       async getLocation(this: RoomDocument) {
         return await RoomLocation.findOne({ room: this._id });
       },
+
+      async populateAll(this: RoomDocument) {
+        return await this.populate([
+          {
+            path: "owner",
+            // populate: [
+            //   {
+            //     path: "gender",
+            //   },
+            //   {
+            //     path: "role",
+            //   },
+            //   {
+            //     path: "phone",
+            //   },
+            //   {
+            //     path: "email",
+            //   },
+            // ],
+          },
+          {
+            path: "room_type",
+          },
+          {
+            path: "location",
+          },
+          {
+            path: "images",
+          },
+        ]);
+      },
     },
     statics: {
-      async findByIdPopulated(id) {
-        return await model("Room").findById(id).populate("owner").populate("room_type").populate("location").populate("images");
+      async findPopulated(query) {
+        return await model("Room")
+          .find(query)
+          .populate([
+            {
+              path: "owner",
+              populate: [
+                {
+                  path: "gender",
+                },
+                {
+                  path: "role",
+                },
+                {
+                  path: "phone",
+                },
+                {
+                  path: "email",
+                },
+              ],
+            },
+          ])
+          .populate("room_type")
+          .populate("location")
+          .populate("images");
       },
     },
   }

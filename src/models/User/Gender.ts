@@ -1,6 +1,22 @@
-import mongoose, { Schema } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export type TGender = "male" | "female" | "unknown";
+export interface IGender {
+  _id: Types.ObjectId | string;
+
+  title: TGender;
+  display_name: string | null;
+}
+interface IGenderMethods {}
+
+interface UserModel extends Model<IGender, {}, IGenderMethods> {
+  // static methods
+}
+
+export type GenderDocument = MongooseDocConvert<IGender, IGenderMethods>;
+
+const schema = new Schema<IGender, UserModel, IGenderMethods>(
   {
     title: {
       type: String,
@@ -16,13 +32,13 @@ const schema = new Schema(
   }
 );
 
-const Gender = mongoose.model("Gender", schema);
+const Gender = mongoose.model<IGender, UserModel>("Gender", schema);
 async function createGenderOnStart() {
-  const gender = await Gender.findOne();
+  if (await Gender.findOne()) return;
 
-  if (gender) return;
-
-  await Gender.insertMany([
+  const obj: (Partial<IGender> & {
+    title: TGender;
+  })[] = [
     {
       title: "male",
       display_name: "Nam",
@@ -35,6 +51,8 @@ async function createGenderOnStart() {
       title: "unknown",
       display_name: "Không biết",
     },
-  ]);
+  ];
+
+  await Gender.insertMany(obj);
 }
 export { Gender, createGenderOnStart };

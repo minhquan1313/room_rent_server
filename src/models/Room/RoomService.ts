@@ -1,7 +1,7 @@
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import mongoose, { Model, Schema, Types } from "mongoose";
 
-export type TRoomService = "Wifi free" | "Mặt tiền" | "Trung tâm thành phố" | "Nhà trong hẻm" | "An ninh cao" | "Có hầm gửi xe";
+export type TRoomService = "wifi" | "mt" | "center" | "hood" | "security" | "parking";
 export interface IRoomService {
   _id: Types.ObjectId;
 
@@ -41,10 +41,9 @@ const RoomService = mongoose.model<IRoomService, RoomServiceModel>("RoomService"
 async function createRoomServicesOnStart() {
   if (await RoomService.findOne()) return;
 
-  interface ITemp extends Omit<IRoomService, "_id" | "updatedAt" | "createdAt"> {
-    display_name: TRoomService;
-  }
-  const objs: ITemp[] = [
+  const obj: (Partial<IRoomService> & {
+    title: TRoomService;
+  })[] = [
     {
       title: "wifi",
       display_name: "Wifi free",
@@ -71,7 +70,7 @@ async function createRoomServicesOnStart() {
     },
   ];
 
-  await RoomService.insertMany(objs);
+  await RoomService.insertMany(obj);
 }
 
 export { RoomService, createRoomServicesOnStart };
