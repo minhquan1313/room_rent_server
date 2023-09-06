@@ -7,9 +7,6 @@ export interface IRole {
 
   title: TRole;
   display_name: string | null;
-
-  updatedAt: Date;
-  createdAt: Date;
 }
 interface IRoleMethods {
   //  methods

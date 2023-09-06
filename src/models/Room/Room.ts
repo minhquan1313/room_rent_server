@@ -1,11 +1,13 @@
 import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
 import { RoomService, RoomServiceDocument, TRoomService } from "@/models/Room/RoomService";
+import { RoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
+import { User } from "@/models/User/User";
 import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
-import { Model, Schema, Types, model } from "mongoose";
+import { FilterQuery, Model, Schema, Types, isValidObjectId, model } from "mongoose";
 
 export interface IRoom {
   _id: Types.ObjectId;
@@ -41,7 +43,7 @@ interface IRoomMethods {
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {
   // static methods
-  findPopulated(query: Partial<IRoom>): Promise<RoomDocument[]>;
+  findPopulated(query: FilterQuery<IRoom>): Promise<RoomDocument[]>;
 }
 export type RoomDocument = MongooseDocConvert<IRoom, IRoomMethods>;
 
@@ -183,8 +185,8 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
             await imageToDelete.deleteOne();
           }
 
-          const sources = imagesToDelete.map((r) => r.image);
-          sources.forEach((src) => {
+          const sourcesToDelete = imagesToDelete.map((r) => r.image);
+          sourcesToDelete.forEach((src) => {
             try {
               UploadService.unLinkUserFileSync(src);
             } catch (error) {
@@ -193,7 +195,9 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           });
         }
 
-        this.images = await RoomImage.find({ room: this._id });
+        const roomImages = await RoomImage.reOrderImages(this._id.toString());
+
+        this.images = roomImages.map((r) => r._id);
         await this.save();
       },
 
@@ -280,29 +284,43 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           .populate([
             {
               path: "owner",
-              populate: [
-                {
-                  path: "gender",
-                },
-                {
-                  path: "role",
-                },
-                {
-                  path: "phone",
-                },
-                {
-                  path: "email",
-                },
-              ],
+              // populate: [
+              //   {
+              //     path: "gender",
+              //   },
+              //   {
+              //     path: "role",
+              //   },
+              //   {
+              //     path: "phone",
+              //   },
+              //   {
+              //     path: "email",
+              //   },
+              // ],
             },
-          ])
-          .populate("room_type")
-          .populate("location")
-          .populate("images");
+            {
+              path: "room_type",
+            },
+            {
+              path: "location",
+            },
+            {
+              path: "images",
+            },
+            {
+              path: "services",
+            },
+          ]);
       },
     },
   }
 );
+schema.index({
+  name: "text",
+  sub_name: "text",
+  description: "text",
+});
 
 // schema.pre("find", function (next) {
 //   this.sort({
@@ -316,66 +334,116 @@ const Room = model<IRoom, RoomModel>("Room", schema);
 
 const validateAddRoom = () => {
   return [
-    // check("owner", "Thiếu chủ sở hữu").not().isEmpty(),
-    check("room_type", "Thiếu kiểu phòng").not().isEmpty(),
-    check("name", "Thiếu tên phòng").not().isEmpty(),
+    check("owner", "Chủ sở hữu không tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await User.findOne({ _id: req.body.owner });
+        if (!doc) throw new Error();
+      }),
 
-    check("price_per_month", "Thiếu giá phòng").not().isEmpty(),
-    check("price_per_month", "Thiếu giá không hợp lệ").isNumeric(),
+    check("room_type", "Kiểu phòng không tồn tại").custom(async (value, { req }) => {
+      const doc = await RoomType.findOne({ title: req.body.room_type });
+      if (!doc) throw new Error();
+    }),
 
-    check("location", "Thiếu vị trí").isObject(),
-    check("location.lat", "Cung cấp lat")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.lat", "Lat phải là số")
-      //
-      .if(check("location").exists())
-      .isNumeric(),
-    check("location.long", "Cung cấp long")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.province", "Cung cấp province")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.province_code", "Cung cấp province_code")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.district", "Cung cấp district")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.district_code", "Cung cấp district_code")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.ward", "Cung cấp ward")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.ward_code", "Cung cấp ward_code")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
-    check("location.detail_location", "Cung cấp detail_location")
-      //
-      .if(check("location").exists())
-      .not()
-      .isEmpty(),
+    check("name", "Thiếu tên phòng").optional().not().isEmpty(),
+
+    check("price_per_month", "Thiếu giá phòng").optional().not().isEmpty(),
+    check("price_per_month", "Giá không hợp lệ").optional().isNumeric(),
+
+    check("location", "Vị trí phải là object").isObject(),
+    check("location.lat", "Cung cấp lat").if(check("location").exists()).not().isEmpty(),
+    check("location.lat", "Lat phải là số").if(check("location").exists()).isNumeric(),
+
+    check("location.long", "Cung cấp long").if(check("location").exists()).not().isEmpty(),
+    check("location.long", "Long phải là số").if(check("location").exists()).isNumeric(),
+
+    check("location.province", "Cung cấp province").if(check("location").exists()).not().isEmpty(),
+    check("location.province_code", "Cung cấp province_code").if(check("location").exists()).not().isEmpty(),
+    check("location.province_code", "province_code phải là số").if(check("location").exists()).isNumeric(),
+
+    check("location.district", "Cung cấp district").if(check("location").exists()).not().isEmpty(),
+    check("location.district_code", "Cung cấp district_code").if(check("location").exists()).not().isEmpty(),
+    check("location.district_code", "district_code phải là số").if(check("location").exists()).isNumeric(),
+
+    check("location.ward", "Cung cấp ward").if(check("location").exists()).not().isEmpty(),
+    check("location.ward_code", "Cung cấp ward_code").if(check("location").exists()).not().isEmpty(),
+    check("location.ward_code", "ward_code phải là số").if(check("location").exists()).isNumeric(),
+
+    check("location.detail_location", "Cung cấp detail_location").if(check("location").exists()).not().isEmpty(),
 
     check("services", "Dịch vụ sai").optional().isArray(),
+    check("services", "Có 1 số dịch vụ không tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await RoomService.find({
+          title: req.body.services,
+        });
+        if (!doc) throw new Error();
+      }),
   ];
 };
 
-export { Room, validateAddRoom };
+const validateEditRoom = () => {
+  return [
+    check("owner", "Chủ sở hữu không tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await User.findOne({ _id: req.body.owner });
+        if (!doc) throw new Error();
+      }),
+    check("roomId", "Phòng không tồn tại").custom(async (value, { req }) => {
+      if (!req.params?.roomId || !isValidObjectId(req.params.roomId)) throw new Error();
+
+      const doc = await Room.findOne({ _id: req.params.roomId });
+      if (!doc) throw new Error();
+    }),
+
+    check("room_type", "Kiểu phòng không tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await RoomType.findOne({ title: req.body.room_type });
+        if (!doc) throw new Error();
+      }),
+
+    check("name", "Thiếu tên phòng").optional().not().isEmpty(),
+
+    check("price_per_month", "Thiếu giá phòng").optional().not().isEmpty(),
+    check("price_per_month", "Giá không hợp lệ").optional().isNumeric(),
+
+    check("location", "Vị trí phải là object").optional().isObject(),
+    check("location.lat", "Cung cấp lat").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.lat", "Lat phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    check("location.long", "Cung cấp long").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.long", "Long phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    check("location.province", "Cung cấp province").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.province_code", "Cung cấp province_code").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.province_code", "province_code phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    check("location.district", "Cung cấp district").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.district_code", "Cung cấp district_code").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.district_code", "district_code phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    check("location.ward", "Cung cấp ward").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.ward_code", "Cung cấp ward_code").optional().if(check("location").exists()).not().isEmpty(),
+    check("location.ward_code", "ward_code phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    check("location.detail_location", "Cung cấp detail_location").optional().if(check("location").exists()).not().isEmpty(),
+
+    check("services", "Dịch vụ phải là mảng").optional().isArray(),
+    check("services", "Có 1 số dịch vụ không tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await RoomService.find({
+          title: req.body.services,
+        });
+        if (!doc) throw new Error();
+      }),
+
+    check("images", "Ảnh phải là mảng").optional().isArray(),
+  ];
+};
+
+export { Room, validateAddRoom, validateEditRoom };

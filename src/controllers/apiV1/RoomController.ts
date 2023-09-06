@@ -2,29 +2,89 @@ import { errorResponse } from "@/Utils/errorRes";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Room } from "@/models/Room/Room";
 import { RoomImage } from "@/models/Room/RoomImage";
-import { User, UserDocument } from "@/models/User/User";
-import RoomService, { TRoomJSON } from "@/services/RoomService";
-import UploadService from "@/services/UploadService";
+import RoomLocationService from "@/services/RoomLocationService";
+import RoomService, { RoomSearchQuery, TRoomJSON } from "@/services/RoomService";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 class RoomController {
-  validatePreAddRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    next();
+  // /api/v1/rooms/
+  async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query: RoomSearchQuery = req.query;
+      console.log(`🚀 ~ RoomController ~ getAll ~ query:`, query);
+
+      res.json(await RoomService.getAll(query));
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
+  }
+  // /api/v1/rooms/exist-provinces
+  async getExistProvinces(req: Request, res: Response, next: NextFunction) {
+    const results = await RoomLocationService.getExistProvinces();
+
+    res.json(results);
+  }
+  // /api/v1/rooms/exist-districts
+  async getExistDistricts(req: Request, res: Response, next: NextFunction) {
+    const results = await RoomLocationService.getExistDistricts();
+
+    res.json(results);
+  }
+  // /api/v1/rooms/exist-wards
+  async getExistWards(req: Request, res: Response, next: NextFunction) {
+    const results = await RoomLocationService.getExistWards();
+
+    res.json(results);
   }
 
-  // /api/v1/rooms/
+  // /api/v1/rooms/test
   async postAddRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
-      const { user } = req;
-
+      const { files, user } = req;
       const { owner, ...formData }: TRoomJSON = req.body;
+      console.log(`🚀 ~ RoomController ~ postAddRoomTest ~ req.body:`, req.body);
 
-      let uId = user!._id.toString();
-      if (owner && (await User.findById(owner))) uId = owner;
+      let userId = owner ?? user!._id.toString();
 
-      const room = await RoomService.create(uId, formData);
+      // Make room first
+      const room = await RoomService.create(userId, formData);
 
+      const roomId = room._id.toString();
+
+      if (Array.isArray(files)) {
+        // Add image to room later
+        const imgIds = await RoomService.roomImagesUpload(files, userId, roomId, true);
+        await RoomService.update(roomId, { images: imgIds });
+      }
+
+      return res.json(await (await Room.findById(roomId))?.populateAll());
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
+  }
+
+  // /api/v1/rooms/:userId/:roomId
+  async patchEditRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
+    try {
+      const { roomId } = req.params;
+      const { files, user } = req;
+      console.log(`🚀 ~ RoomController ~ patchEditRoom ~ files:`, files);
+      const { images, owner, imagesOrders }: Partial<TRoomJSON> = req.body;
+
+      let userId = owner ?? user!._id.toString();
+
+      if (images) await RoomImage.reOrderImagesWithIdsOrdered(images);
+
+      let newImagesIds: string[] = Array.isArray(images) ? images : [];
+      if (Array.isArray(files)) {
+        newImagesIds.push(...(await RoomService.roomImagesUpload(files, userId, roomId, imagesOrders)));
+      }
+
+      const room = await RoomService.update(roomId, {
+        ...req.body,
+        images: newImagesIds,
+      });
       res.json(room);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
@@ -32,76 +92,30 @@ class RoomController {
   }
 
   // /api/v1/rooms/image/:roomId
-  async postUploadImagesAndAdd(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    try {
-      const { files } = req;
-      const { roomId } = req.params;
-      req.body;
-      console.log(`🚀 ~ RoomController ~ patchImage ~ req.body:`, req.body);
+  // async postNewImagesToRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  //   try {
+  //     const { files } = req;
+  //     const { roomId } = req.params;
 
-      if (!Array.isArray(files)) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No images`));
+  //     const { imagesOrder }: { imagesOrder?: number[] } = req.body;
+  //     if (!Array.isArray(files)) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No images`));
 
-      const room = await Room.findById(roomId).populate("owner");
-      if (!room) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`Room not exist`));
+  //     const room = await Room.findById(roomId).populate("owner");
+  //     if (!room) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`Room not exist`));
 
-      const owner = room.owner as unknown as UserDocument;
+  //     const userId = (room.owner as unknown as UserDocument)._id.toString();
+  //     const imgIds = await RoomService.roomImagesUpload(files, userId, roomId, imagesOrder);
 
-      const uploadedImageIds: string[] = [];
-      for await (const file of files) {
-        const newPath = await UploadService.userRoomImageFileUpload(file, owner._id.toString(), roomId);
+  //     const currentImg = (await RoomImage.find({ room: roomId })).map((r) => r._id.toString());
+  //     const imagesIds = Array.from(new Set([...currentImg, ...imgIds]));
 
-        const roomImage = await RoomService.newImageUploaded(roomId, newPath.srcForDb);
+  //     const roomUpdated = await RoomService.update(roomId, { images: imagesIds });
 
-        uploadedImageIds.push(roomImage._id.toString());
-      }
-
-      const currentImg = (await RoomImage.find({ room: roomId })).map((r) => r._id.toString());
-      const imagesIds = Array.from(new Set([...currentImg, ...uploadedImageIds]));
-
-      const user = await RoomService.update(roomId, { images: imagesIds });
-
-      res.json(user);
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-    }
-  }
-
-  // /api/v1/rooms/image/:roomId/:imageId
-  async patchImageOrder(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    try {
-      const { roomId, imageId } = req.params;
-      console.log(`🚀 ~ RoomController ~ patchImage ~ imageId:`, imageId);
-
-      console.log(`🚀 ~ RoomController ~ patchImage ~ roomId:`, roomId);
-
-      res.json("ok");
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-    }
-  }
-  // /api/v1/rooms/:roomId
-  async patchEditRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    try {
-      const { roomId } = req.params;
-
-      const formData: Partial<TRoomJSON> = req.body;
-
-      const room = await RoomService.update(roomId, formData);
-
-      res.json(room);
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-    }
-  }
-
-  // /api/v1/rooms/
-  async getAll(req: Request, res: Response, next: NextFunction) {
-    try {
-      res.json(await RoomService.getAll());
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-    }
-  }
+  //     res.json(roomUpdated?.images);
+  //   } catch (error: any) {
+  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+  //   }
+  // }
 }
 
 export default new RoomController();

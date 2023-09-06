@@ -1,12 +1,10 @@
 import { errorResponse } from "@/Utils/errorRes";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
-import { Email } from "@/models/User/Email";
 import { TRole } from "@/models/User/Role";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
-import PhoneService from "@/services/PhoneService";
 import UploadService from "@/services/UploadService";
-import UserService, { TUserJSON } from "@/services/UserService";
+import UserService from "@/services/UserService";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -58,17 +56,25 @@ class UserController {
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("User not found"));
 
     const user = userDoc.toObject();
+
     res.json(user);
   }
 
   // /api/v1/users/login-token
-  async postLoginToken(req: Request, res: Response, next: NextFunction) {
-    // refresh token
-    const { userId } = req as any;
-    const user = await User.findById(userId).populate("email").populate("role").populate("phone");
-    console.log(`🚀 ~ UserController ~ postLoginToken ~ user:`, user);
+  async postLoginToken(req: RequestAuthenticate, res: Response, next: NextFunction) {
+    try {
+      const { user: userDoc, token } = req;
 
-    res.json(user);
+      await userDoc?.populateAll();
+      const user = userDoc?.toObject();
+      // const user = await (await User.findOne(loginToken.user))?.populateAll();
+
+      (user as any)["token"] = token;
+
+      res.json(user);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
   }
   // /api/v1/users/login
   async postLogin(req: Request, res: Response, next: NextFunction) {
@@ -76,18 +82,17 @@ class UserController {
 
     const encodedPass = LoginTokenService.encodePassword(password);
 
-    const userDoc = await User.findOne({
-      username,
-      $or: [
-        {
-          password: encodedPass,
-        },
-        { password },
-      ],
-    })
-      .populate("phone")
-      .populate("email")
-      .populate("role");
+    const userDoc = await (
+      await User.findOne({
+        username,
+        $or: [
+          {
+            password: encodedPass,
+          },
+          { password },
+        ],
+      })
+    )?.populateAll();
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Invalid username or password`));
 
     const user = userDoc.toObject();
@@ -99,7 +104,7 @@ class UserController {
     res.json(user);
   }
   // /api/v1/users/
-  async post(req: Request, res: Response, next: NextFunction) {
+  async post(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       console.log(`🚀 ~ UserController ~ post ~ userDoc:`);
       const userDoc = await UserService.createUser(req.body);
@@ -161,6 +166,18 @@ class UserController {
   async patchImage(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { file } = req;
+      // {
+      //   fieldname: "image",
+      //   originalname: "nficon2016.ico",
+      //   encoding: "7bit",
+      //   mimetype: "image/vnd.microsoft.icon",
+      //   destination: "E:\\Workspace\\school\\quan_ly_nha_tro\\room_rent_server\\temp",
+      //   filename: "nficon2016_1693725805214_19296.ico",
+      //   path: "E:\\Workspace\\school\\quan_ly_nha_tro\\room_rent_server\\temp\\nficon2016_1693725805214_19296.ico",
+      //   size: 16958,
+      // };
+      console.log(`🚀 ~ UserController ~ patchImage ~ file:`, file);
+
       const { userId } = req.params;
       if (!file) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No file`));
 
@@ -198,31 +215,6 @@ class UserController {
     }
 
     res.status(StatusCodes.NO_CONTENT).json();
-  }
-
-  async validatePreCreateUser(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { tell, email, region_code, username }: TUserJSON = req.body;
-
-      if (await User.findOne({ username })) {
-        return res.status(StatusCodes.CONFLICT).json(errorResponse(`username exist`));
-      }
-
-      const isValidPhoneNumber = PhoneService.isValid(tell, region_code);
-      if (!isValidPhoneNumber) return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`invalid phone number`));
-
-      if (await PhoneService.findOne(tell)) {
-        return res.status(StatusCodes.CONFLICT).json(errorResponse(`phone exist`));
-      }
-
-      if (email && (await Email.findOne({ email }))) {
-        return res.status(StatusCodes.CONFLICT).json(errorResponse(`email exist`));
-      }
-
-      next();
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-    }
   }
 }
 

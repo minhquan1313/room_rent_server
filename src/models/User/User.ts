@@ -9,7 +9,7 @@ import { check } from "express-validator";
 import { Model, Schema, Types, model } from "mongoose";
 
 export interface IUser {
-  _id: Types.ObjectId | string;
+  _id: Types.ObjectId;
 
   username: string;
   password: string;
@@ -259,11 +259,17 @@ async function createAdminOnStart() {
   }
 }
 
-const validateRegisterUser = () => {
+export const validateRegisterUser = () => {
   return [
     check("username", "Tên người dùng không được trống").not().isEmpty(),
     check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
+    check("username", "Username đã tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await User.findOne({ username: req.body.username });
+        if (doc) throw new Error();
+      }),
 
     check("password", "Mật khẩu không được trống").not().isEmpty(),
     check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
@@ -271,20 +277,46 @@ const validateRegisterUser = () => {
     check("first_name", "Tên không được để trống").not().isEmpty(),
 
     check("tell", "Số điện thoại không được trống").not().isEmpty(),
+    check("tell", "Số điện thoại đã tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await PhoneService.findOne(req.body.tell);
+        if (doc) throw new Error();
+      }),
+    check("tell", "Số điện thoại không hợp lệ")
+      .optional()
+      .if(check("region_code").exists())
+      .custom(async (value, { req }) => {
+        const valid = PhoneService.isValid(req.body.tell, req.body.region_code);
+        if (!valid) throw new Error();
+      }),
+
     check("region_code", "Thiếu mã vùng").not().isEmpty(),
 
     check("email", "Email không hợp lệ").optional().isEmail(),
+    check("email", "Email đã tồn tại")
+      .optional()
+      .custom(async (value, { req }) => {
+        const doc = await Email.findOne({ email: req.body.email });
+        if (doc) throw new Error();
+      }),
   ];
 };
-const validateLoginUser = () => {
+export const validateUserId = () =>
+  check("userId", "Người dùng không tồn tại").custom(async (value, { req }) => {
+    if (!req.params?.userId) throw new Error();
+
+    const doc = await Email.findOne({ email: req.params.userId });
+    if (doc) throw new Error();
+  });
+
+export const validateLoginUser = () => {
   return [
     check("username", "Tên người dùng không được trống").not().isEmpty(),
-    check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
 
     check("password", "Mật khẩu không được trống").not().isEmpty(),
-    check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
   ];
 };
 
-export { User, createAdminOnStart, validateLoginUser, validateRegisterUser };
+export { User, createAdminOnStart };

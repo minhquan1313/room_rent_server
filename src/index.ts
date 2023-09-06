@@ -20,8 +20,6 @@ db.connect().catch(() => {
 
 preload();
 
-console.log(process.cwd());
-
 export const publicStaticServerFolder = path.join(__dirname, "static");
 createFolderFsSync(publicStaticServerFolder);
 
@@ -41,8 +39,12 @@ app.use(express.static(publicStaticServerFolder));
 app.use(express.static(userStaticFolder));
 app.use(morgan("dev"));
 app.use(cookieParser());
-app.use(bodyParser.json());
+
+// form data but no enctype="multipart/form-data" AKA x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// fetch with json and "Content-Type": "application/json"
+app.use(bodyParser.json());
 
 route(app);
 

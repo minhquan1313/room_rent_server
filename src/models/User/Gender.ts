@@ -3,7 +3,7 @@ import mongoose, { Model, Schema, Types } from "mongoose";
 
 export type TGender = "male" | "female" | "unknown";
 export interface IGender {
-  _id: Types.ObjectId | string;
+  _id: Types.ObjectId;
 
   title: TGender;
   display_name: string | null;
@@ -16,21 +16,16 @@ interface UserModel extends Model<IGender, {}, IGenderMethods> {
 
 export type GenderDocument = MongooseDocConvert<IGender, IGenderMethods>;
 
-const schema = new Schema<IGender, UserModel, IGenderMethods>(
-  {
-    title: {
-      type: String,
-      required: true,
-    },
-    display_name: {
-      type: String,
-      default: null,
-    },
+const schema = new Schema<IGender, UserModel, IGenderMethods>({
+  title: {
+    type: String,
+    required: true,
   },
-  {
-    timestamps: true,
-  }
-);
+  display_name: {
+    type: String,
+    default: null,
+  },
+});
 
 const Gender = mongoose.model<IGender, UserModel>("Gender", schema);
 async function createGenderOnStart() {

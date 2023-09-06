@@ -15,7 +15,8 @@ class UploadService {
     return await this.fileUpload(file, userStaticFolder, "user", userId, "avatar");
   }
   async userRoomImageFileUpload(file: Express.Multer.File, userId: string, roomId: string): Promise<TUploadFile> {
-    return await this.fileUpload(file, userStaticFolder, "user", userId, "room", roomId);
+    return await this.fileUpload(file, userStaticFolder, "room", roomId);
+    // return await this.fileUpload(file, userStaticFolder, "user", userId, "room", roomId);
   }
   async fileUpload(file: Express.Multer.File, finalPath: string, ...subPath: string[]): Promise<TUploadFile> {
     const [fileType] = file.mimetype.split("/");
@@ -33,10 +34,20 @@ class UploadService {
     };
   }
   unLinkUserFileSync(srcForDb: string) {
-    const p = path.join(userStaticFolder, srcForDb);
-    console.log(`🚀 ~ UploadService ~ unLinkUserFileSync ~ p:`, p);
+    return this.unLinkFileSync(path.join(userStaticFolder, srcForDb));
+  }
+  unLinkFileSync(path: string) {
+    try {
+      console.log(`🚀 ~ UploadService ~ unLinkFileSync ~ path:`, path);
 
-    fs.unlinkSync(p);
+      fs.unlinkSync(path);
+
+      return true;
+    } catch (error) {
+      console.log(`🚀 ~ UploadService ~ unLinkFileSync ~ error:`, error);
+
+      return false;
+    }
   }
 }
 

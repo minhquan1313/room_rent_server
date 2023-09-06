@@ -97,7 +97,7 @@ class UserService {
 
     if (email) await user.addOrUpdateEmail(email);
 
-    return await (await User.findById(userId))?.populateAll();
+    return user.populateAll();
   }
   async changeRole(userId: string | Types.ObjectId, role: TRole) {
     const r = await Role.findOne({

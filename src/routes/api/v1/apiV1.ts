@@ -1,10 +1,10 @@
 import ApiController from "@/controllers/apiV1/ApiController";
 import { roomV1Router } from "@/routes/api/v1/roomV1";
 import { userV1Router } from "@/routes/api/v1/userV1";
-import express, { NextFunction, Request, Response } from "express";
+import { Router } from "express";
 
 // /api/v1
-const router = express.Router();
+const router = Router();
 
 router.use("/test", (req, res) => {
   res.json(req.body);

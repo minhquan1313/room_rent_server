@@ -24,6 +24,7 @@ const schema = new Schema<IRoomService, RoomServiceModel, IRoomServiceMethods>(
   {
     title: {
       type: String,
+      unique: true,
       required: true,
     },
     display_name: {
