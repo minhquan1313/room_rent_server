@@ -43,6 +43,9 @@ app.use(cookieParser());
 // form data but no enctype="multipart/form-data" AKA x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// form data enctype="multipart/form-data"
+// app.use(UploaderMiddleware.any());
+
 // fetch with json and "Content-Type": "application/json"
 app.use(bodyParser.json());
 
@@ -51,6 +54,4 @@ route(app);
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT} | http://localhost:${PORT}`);
-
-  console.log(process.env.PORT);
 });

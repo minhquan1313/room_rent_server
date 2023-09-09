@@ -18,6 +18,7 @@ interface RoleModel extends Model<IRole, {}, IRoleMethods> {
   getRoleAdmin2(): Promise<RoleDocument | null>;
   getRoleUser(): Promise<RoleDocument | null>;
   getRoleOwner(): Promise<RoleDocument | null>;
+  getUserAssignableRoles(): Promise<RoleDocument[]>;
 }
 export type RoleDocument = MongooseDocConvert<IRole, IRoleMethods>;
 
@@ -46,6 +47,11 @@ const schema = new Schema<IRole, RoleModel, IRoleMethods>(
       },
       async getRoleOwner(): Promise<RoleDocument | null> {
         return await this.findOne({ title: "owner" });
+      },
+      async getUserAssignableRoles(): Promise<RoleDocument[]> {
+        const t: TRole[] = ["owner", "user"];
+
+        return await this.find({ title: { $in: t } });
       },
     },
   }

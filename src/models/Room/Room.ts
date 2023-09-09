@@ -21,12 +21,19 @@ export interface IRoom {
   name: string;
   sub_name: string | null;
   description: string | null;
+
   price_per_month: number;
+  price_currency_code: string;
+
   usable_area: number | null;
-  number_of_room: number | null;
+  usable_area_unit: string | null;
+
+  number_of_living_room: number | null;
   number_of_bedroom: number | null;
   number_of_bathroom: number | null;
   number_of_floor: number;
+
+  available: boolean;
 
   updatedAt: Date;
   createdAt: Date;
@@ -92,12 +99,21 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       type: Number,
       required: true,
     },
+    price_currency_code: {
+      type: String,
+      required: true,
+    },
     usable_area: {
       // square meters
       type: Number,
       default: null,
     },
-    number_of_room: {
+    usable_area_unit: {
+      // square meters
+      type: String,
+      default: null,
+    },
+    number_of_living_room: {
       type: Number,
       default: null,
     },
@@ -112,6 +128,11 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
     number_of_floor: {
       type: Number,
       default: 1,
+    },
+
+    available: {
+      type: Boolean,
+      default: true,
     },
   },
   {

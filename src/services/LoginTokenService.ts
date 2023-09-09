@@ -89,6 +89,7 @@ class LoginTokenService {
     // default will be 30
     const date = new Date();
     date.setDate(date.getDate() + 30);
+    date.setSeconds(date.getSeconds() + 3);
 
     return date;
   }

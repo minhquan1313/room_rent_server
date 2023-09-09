@@ -80,7 +80,7 @@ class UserService {
     if (email) await user.addOrUpdateEmail(email);
 
     // const _user = (await User.findPopulated({ _id: user._id }))[0];
-    return user;
+    return await user.populateAll();
   }
 
   async updateUser(userId: string, { email, tell, gender, region_code, password, role, ...f }: Partial<TUserJSON>) {

@@ -262,9 +262,9 @@ async function createAdminOnStart() {
 export const validateRegisterUser = () => {
   return [
     check("username", "Tên người dùng không được trống").not().isEmpty(),
-    check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
+    // check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
-    check("username", "Username đã tồn tại")
+    check("username", "Tên người dùng đã tồn tại")
       .optional()
       .custom(async (value, { req }) => {
         const doc = await User.findOne({ username: req.body.username });
@@ -272,7 +272,7 @@ export const validateRegisterUser = () => {
       }),
 
     check("password", "Mật khẩu không được trống").not().isEmpty(),
-    check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
+    // check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
 
     check("first_name", "Tên không được để trống").not().isEmpty(),
 

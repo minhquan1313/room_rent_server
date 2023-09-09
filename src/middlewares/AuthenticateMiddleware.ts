@@ -12,6 +12,18 @@ export type RequestAuthenticate = Request & {
   token?: string;
 };
 export async function AuthenticateMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  if (await Auth(req, res, next)) return next();
+
+  res.status(StatusCodes.UNAUTHORIZED).json(errorResponse(`Unauthorized`));
+}
+
+export async function IsAuthenticatedMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  await Auth(req, res, next);
+
+  next();
+}
+
+async function Auth(req: RequestAuthenticate, res: Response, next: NextFunction) {
   try {
     const bearerToken = req.headers.authorization;
     if (!bearerToken) throw new Error();
@@ -40,9 +52,9 @@ export async function AuthenticateMiddleware(req: RequestAuthenticate, res: Resp
     req.user = user;
     req.roleTitle = role?.title;
     req.token = token;
-    next();
+    return true;
   } catch (error: any) {
     // "Unauthorized"
-    return res.status(StatusCodes.UNAUTHORIZED).json(errorResponse(`Unauthorized`));
+    return false;
   }
 }

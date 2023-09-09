@@ -22,12 +22,19 @@ export type TRoomJSON = {
 
   sub_name?: string;
   description?: string;
+
   price_per_month: number;
+  price_currency_code: string;
+
   usable_area?: number;
-  number_of_room?: number;
+  usable_area_unit: string | null;
+
+  number_of_living_room?: number;
   number_of_bedroom?: number;
   number_of_bathroom?: number;
   number_of_floor?: number;
+
+  available?: boolean;
 };
 export interface RoomSearchQuery {
   services?: string;
