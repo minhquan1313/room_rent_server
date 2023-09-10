@@ -1,7 +1,7 @@
 import { errorResponse } from "@/Utils/errorRes";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Room } from "@/models/Room/Room";
-import { RoomImage } from "@/models/Room/RoomImage";
+import RoomImageService from "@/services/RoomImageService";
 import RoomLocationService from "@/services/RoomLocationService";
 import RoomService, { RoomSearchQuery, TRoomJSON } from "@/services/RoomService";
 import { NextFunction, Request, Response } from "express";
@@ -74,7 +74,7 @@ class RoomController {
 
       let userId = owner ?? user!._id.toString();
 
-      if (images) await RoomImage.reOrderImagesWithIdsOrdered(images);
+      if (images) await RoomImageService.reOrderImagesWithIdsOrdered(images);
 
       let newImagesIds: string[] = Array.isArray(images) ? images : [];
       if (Array.isArray(files)) {

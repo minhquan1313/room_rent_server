@@ -1,9 +1,8 @@
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import preload from "@/Utils/preload";
 import db from "@/config/db";
-import route from "@/routes";
+import router from "@/routes";
 import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -21,7 +20,6 @@ db.connect().catch(() => {
 preload();
 
 export const publicStaticServerFolder = path.join(__dirname, "static");
-createFolderFsSync(publicStaticServerFolder);
 
 export const userStaticFolder = path.join(process.cwd(), "userDataUpload");
 createFolderFsSync(userStaticFolder);
@@ -38,18 +36,14 @@ app.use(cors(corsOptions));
 app.use(express.static(publicStaticServerFolder));
 app.use(express.static(userStaticFolder));
 app.use(morgan("dev"));
-app.use(cookieParser());
 
 // form data but no enctype="multipart/form-data" AKA x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// form data enctype="multipart/form-data"
-// app.use(UploaderMiddleware.any());
-
 // fetch with json and "Content-Type": "application/json"
 app.use(bodyParser.json());
 
-route(app);
+app.use(router);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

@@ -1,17 +1,20 @@
 import { publicStaticServerFolder } from "@/index";
 import { apiRouter } from "@/routes/api/api";
-import { homeRouter } from "@/routes/home";
-import { Application } from "express";
+import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 
-function route(app: Application) {
-  app.use("/api", apiRouter);
+const router = Router();
 
-  app.get("/", homeRouter);
+router.use("/api", apiRouter);
 
-  app.use("*", function (req, res) {
-    res.status(StatusCodes.NOT_FOUND).sendFile(`page404.html`, { root: publicStaticServerFolder });
+router.get("/", (req, res) => {
+  res.send(`Hello, day la trang chu`);
+});
+
+router.use("*", function (req, res) {
+  res.status(StatusCodes.NOT_FOUND).sendFile(`page404.html`, {
+    root: publicStaticServerFolder,
   });
-}
+});
 
-export default route;
+export default router;

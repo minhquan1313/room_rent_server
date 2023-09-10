@@ -4,6 +4,7 @@ import { RoomService, RoomServiceDocument, TRoomService } from "@/models/Room/Ro
 import { RoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { User } from "@/models/User/User";
+import RoomImageService from "@/services/RoomImageService";
 import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
@@ -34,6 +35,7 @@ export interface IRoom {
   number_of_floor: number;
 
   available: boolean;
+  disabled: boolean;
 
   updatedAt: Date;
   createdAt: Date;
@@ -134,6 +136,10 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       type: Boolean,
       default: true,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -216,7 +222,7 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           });
         }
 
-        const roomImages = await RoomImage.reOrderImages(this._id.toString());
+        const roomImages = await RoomImageService.reOrderImages(this._id.toString());
 
         this.images = roomImages.map((r) => r._id);
         await this.save();

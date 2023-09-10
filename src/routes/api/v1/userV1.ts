@@ -15,6 +15,7 @@ router.get("/:userId", AuthenticateMiddleware, UserController.getSingle);
 router.post("/upload", UploaderMiddleware.single("file2"), UserController.upload);
 router.post("/upload-many", UploaderMiddleware.array("files2"), UserController.uploadMany);
 
+// router.post("/transfer-admin");
 router.post("/login-token", AuthenticateMiddleware, UserController.postLoginToken);
 router.post("/login", validateLoginUser(), ValidateMiddleware, UserController.postLogin);
 router.post("/", validateRegisterUser(), ValidateMiddleware, UserController.post);
