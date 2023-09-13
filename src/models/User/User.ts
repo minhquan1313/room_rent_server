@@ -1,8 +1,8 @@
 import { Email } from "@/models/User/Email";
 import { PhoneNumber } from "@/models/User/PhoneNumber";
-import { Role } from "@/models/User/Role";
 import LoginTokenService from "@/services/LoginTokenService";
 import PhoneService from "@/services/PhoneService";
+import RoleService from "@/services/RoleService";
 import UserService from "@/services/UserService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
@@ -34,8 +34,6 @@ interface IUserMethods {
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
   // static methods
-  getUsers(): Promise<UserDocument[]>;
-  getOwner(): Promise<UserDocument[]>;
   findPopulated(query: Partial<IUser>): Promise<UserDocument[]>;
 }
 
@@ -182,18 +180,14 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       },
     },
     statics: {
-      async getUsers(): Promise<UserDocument[]> {
-        const role = Role.getRoleUser();
-
-        return await model("User").find({ role });
-      },
-      async getOwner(): Promise<UserDocument[]> {
-        const role = Role.getRoleOwner();
-        return await model("User").find({ role });
-      },
-
       async findPopulated(query) {
-        return await model("User").find(query).populate("role").populate("phone").populate("email").populate("gender");
+        return await model("User")
+          .find(query)
+          //
+          .populate("role")
+          .populate("phone")
+          .populate("email")
+          .populate("gender");
       },
     },
   }
@@ -226,7 +220,7 @@ async function createAdminOnStart() {
     ln: "Mai Thanh",
   };
 
-  const roleAdmin = await Role.getRoleAdmin();
+  const roleAdmin = await RoleService.getRoleAdmin();
   if (!roleAdmin) return;
 
   let user = await User.findOne({ role: roleAdmin });
@@ -240,13 +234,13 @@ async function createAdminOnStart() {
       tell: defaultAdminInfo.tel,
       region_code: defaultAdminInfo.telCode,
       gender: "male",
+      role: roleAdmin.title,
     });
 
     if (!(await Email.findOne({ email: defaultAdminInfo.email }))) {
       user?.addOrUpdateEmail(defaultAdminInfo.email);
     }
     const userId = user!._id;
-    await UserService.changeRole(userId, roleAdmin.title);
 
     // const token = await LoginTokenService.makeToken({ username: defaultAdminInfo.username, userId });
     const token = await LoginTokenService.makeTokenRaw({
@@ -265,7 +259,7 @@ export const validateRegisterUser = () => {
     // check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
     check("username", "Tên người dùng đã tồn tại")
-      .optional()
+      //
       .custom(async (value, { req }) => {
         const doc = await User.findOne({ username: req.body.username });
         if (doc) throw new Error();
@@ -302,13 +296,12 @@ export const validateRegisterUser = () => {
       }),
   ];
 };
-export const validateUserId = () =>
-  check("userId", "Người dùng không tồn tại").custom(async (value, { req }) => {
-    if (!req.params?.userId) throw new Error();
-
-    const doc = await Email.findOne({ email: req.params.userId });
-    if (doc) throw new Error();
-  });
+export const validateUpdateUser = () => {
+  return [
+    //
+    check("username", "Tên người dùng không được đổi").not().exists(),
+  ];
+};
 
 export const validateLoginUser = () => {
   return [

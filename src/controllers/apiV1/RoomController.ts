@@ -2,14 +2,13 @@ import { errorResponse } from "@/Utils/errorRes";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Room } from "@/models/Room/Room";
 import RoomImageService from "@/services/RoomImageService";
-import RoomLocationService from "@/services/RoomLocationService";
 import RoomService, { RoomSearchQuery, TRoomJSON } from "@/services/RoomService";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 class RoomController {
   // /api/v1/rooms/
-  async getAll(req: Request, res: Response, next: NextFunction) {
+  async getOrSearch(req: Request, res: Response, next: NextFunction) {
     try {
       const query: RoomSearchQuery = req.query;
       console.log(`🚀 ~ RoomController ~ getAll ~ query:`, query);
@@ -19,31 +18,12 @@ class RoomController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
-  // /api/v1/rooms/exist-provinces
-  async getExistProvinces(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistProvinces();
-
-    res.json(results);
-  }
-  // /api/v1/rooms/exist-districts
-  async getExistDistricts(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistDistricts();
-
-    res.json(results);
-  }
-  // /api/v1/rooms/exist-wards
-  async getExistWards(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistWards();
-
-    res.json(results);
-  }
 
   // /api/v1/rooms/test
   async postAddRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { files, user } = req;
       const { owner, ...formData }: TRoomJSON = req.body;
-      console.log(`🚀 ~ RoomController ~ postAddRoomTest ~ req.body:`, req.body);
 
       let userId = owner ?? user!._id.toString();
 

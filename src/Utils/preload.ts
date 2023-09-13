@@ -8,17 +8,17 @@ import mongoose from "mongoose";
 export default function preload() {
   return new Promise<void>((rs) => {
     if (mongoose.connection.readyState === 1) {
-      doCreate().then(rs);
-    } else
-      mongoose.connection.once("open", async () => {
-        await doCreate();
+      doPreload().then(rs);
+      return;
+    }
 
-        rs();
-      });
+    mongoose.connection.once("open", () => {
+      doPreload().then(rs);
+    });
   });
 }
 
-export async function doCreate() {
+export async function doPreload() {
   await createGenderOnStart();
   await autoCreateRolesOnStart();
 

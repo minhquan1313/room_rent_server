@@ -1,4 +1,4 @@
-import { publicStaticServerFolder } from "@/index";
+import { publicStaticServer } from "@/index";
 import { apiRouter } from "@/routes/api/api";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
@@ -13,7 +13,7 @@ router.get("/", (req, res) => {
 
 router.use("*", function (req, res) {
   res.status(StatusCodes.NOT_FOUND).sendFile(`page404.html`, {
-    root: publicStaticServerFolder,
+    root: publicStaticServer,
   });
 });
 

@@ -20,7 +20,6 @@ class LoginTokenService {
    */
   async makeToken({ username, userId }: ITokenParam) {
     if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
-
     const token = jwt.sign(
       {
         username,
@@ -38,16 +37,6 @@ class LoginTokenService {
     return token;
   }
   async makeTokenRaw({ token, userId }: ITokenRawParam) {
-    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
-
-    // const token = jwt.sign(
-    //   {
-    //     username,
-    //     createdAt: new Date().getTime(),
-    //   },
-    //   process.env.PRIVATE_JWT_KEY
-    // );
-
     const date = this.getTokenDefaultExpire();
 
     await LoginToken.create({ token, user: userId, expire: date });
@@ -55,7 +44,6 @@ class LoginTokenService {
     return token;
   }
   // verify(token: string) {
-  //   if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
   //   try {
   //     const check = jwt.verify(token, process.env.PRIVATE_JWT_KEY);
 

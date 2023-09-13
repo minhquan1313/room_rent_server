@@ -1,6 +1,6 @@
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import { moveFileFs } from "@/Utils/moveFileFs";
-import { userStaticFolder } from "@/index";
+import { publicStaticUser } from "@/index";
 import fs from "fs";
 import path from "path";
 
@@ -11,18 +11,18 @@ export type TUploadFile = {
 };
 
 class UploadService {
-  async userAvatarFileUpload(file: Express.Multer.File, userId: string): Promise<TUploadFile> {
-    return await this.fileUpload(file, userStaticFolder, "user", userId, "avatar");
+  async userAvatarFileUpload({ file, userId }: { file: Express.Multer.File; userId: string }): Promise<TUploadFile> {
+    return await this.fileUpload(file, publicStaticUser, "user", userId, "avatar");
   }
-  async userRoomImageFileUpload(file: Express.Multer.File, userId: string, roomId: string): Promise<TUploadFile> {
-    return await this.fileUpload(file, userStaticFolder, "room", roomId);
+  async userRoomImageFileUpload({ file, roomId }: { file: Express.Multer.File; roomId: string }): Promise<TUploadFile> {
+    return await this.fileUpload(file, publicStaticUser, "room", roomId);
     // return await this.fileUpload(file, userStaticFolder, "user", userId, "room", roomId);
   }
-  async fileUpload(file: Express.Multer.File, finalPath: string, ...subPath: string[]): Promise<TUploadFile> {
+  async fileUpload(file: Express.Multer.File, dest: string, ...subPath: string[]): Promise<TUploadFile> {
     const [fileType] = file.mimetype.split("/");
 
     const relative = path.join(...subPath, fileType, file.filename);
-    const destination = path.join(finalPath, relative);
+    const destination = path.join(dest, relative);
 
     createFolderFsSync(path.dirname(destination));
     await moveFileFs(file.path, destination);
@@ -34,7 +34,7 @@ class UploadService {
     };
   }
   unLinkUserFileSync(srcForDb: string) {
-    return this.unLinkFileSync(path.join(userStaticFolder, srcForDb));
+    return this.unLinkFileSync(path.join(publicStaticUser, srcForDb));
   }
   unLinkFileSync(path: string) {
     try {

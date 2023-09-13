@@ -134,7 +134,7 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
 
     available: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     disabled: {
       type: Boolean,
@@ -375,8 +375,8 @@ const validateAddRoom = () => {
 
     check("name", "Thiếu tên phòng").optional().not().isEmpty(),
 
-    check("price_per_month", "Thiếu giá phòng").optional().not().isEmpty(),
-    check("price_per_month", "Giá không hợp lệ").optional().isNumeric(),
+    check("price_per_month", "Thiếu giá phòng").not().isEmpty(),
+    check("price_per_month", "Giá không hợp lệ").isNumeric(),
 
     check("location", "Vị trí phải là object").isObject(),
     check("location.lat", "Cung cấp lat").if(check("location").exists()).not().isEmpty(),
@@ -385,17 +385,19 @@ const validateAddRoom = () => {
     check("location.long", "Cung cấp long").if(check("location").exists()).not().isEmpty(),
     check("location.long", "Long phải là số").if(check("location").exists()).isNumeric(),
 
+    check("location.country", "Cung cấp quốc gia").optional().if(check("location").exists()).not().isEmpty(),
+
     check("location.province", "Cung cấp province").if(check("location").exists()).not().isEmpty(),
-    check("location.province_code", "Cung cấp province_code").if(check("location").exists()).not().isEmpty(),
-    check("location.province_code", "province_code phải là số").if(check("location").exists()).isNumeric(),
+    // check("location.province_code", "Cung cấp province_code").if(check("location").exists()).not().isEmpty(),
+    // check("location.province_code", "province_code phải là số").if(check("location").exists()).isNumeric(),
 
     check("location.district", "Cung cấp district").if(check("location").exists()).not().isEmpty(),
-    check("location.district_code", "Cung cấp district_code").if(check("location").exists()).not().isEmpty(),
-    check("location.district_code", "district_code phải là số").if(check("location").exists()).isNumeric(),
+    // check("location.district_code", "Cung cấp district_code").if(check("location").exists()).not().isEmpty(),
+    // check("location.district_code", "district_code phải là số").if(check("location").exists()).isNumeric(),
 
     check("location.ward", "Cung cấp ward").if(check("location").exists()).not().isEmpty(),
-    check("location.ward_code", "Cung cấp ward_code").if(check("location").exists()).not().isEmpty(),
-    check("location.ward_code", "ward_code phải là số").if(check("location").exists()).isNumeric(),
+    // check("location.ward_code", "Cung cấp ward_code").if(check("location").exists()).not().isEmpty(),
+    // check("location.ward_code", "ward_code phải là số").if(check("location").exists()).isNumeric(),
 
     check("location.detail_location", "Cung cấp detail_location").if(check("location").exists()).not().isEmpty(),
 
@@ -445,17 +447,19 @@ const validateEditRoom = () => {
     check("location.long", "Cung cấp long").optional().if(check("location").exists()).not().isEmpty(),
     check("location.long", "Long phải là số").optional().if(check("location").exists()).isNumeric(),
 
-    check("location.province", "Cung cấp province").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.province_code", "Cung cấp province_code").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.province_code", "province_code phải là số").optional().if(check("location").exists()).isNumeric(),
+    check("location.country", "Cung cấp quốc gia").optional().if(check("location").exists()).not().isEmpty(),
 
-    check("location.district", "Cung cấp district").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.district_code", "Cung cấp district_code").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.district_code", "district_code phải là số").optional().if(check("location").exists()).isNumeric(),
+    check("location.province", "Cung cấp tỉnh").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.province_code", "Cung cấp province_code").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.province_code", "province_code phải là số").optional().if(check("location").exists()).isNumeric(),
 
-    check("location.ward", "Cung cấp ward").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.ward_code", "Cung cấp ward_code").optional().if(check("location").exists()).not().isEmpty(),
-    check("location.ward_code", "ward_code phải là số").optional().if(check("location").exists()).isNumeric(),
+    // check("location.district", "Cung cấp Huyện/Thị xã/Thành phố").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.district_code", "Cung cấp district_code").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.district_code", "district_code phải là số").optional().if(check("location").exists()).isNumeric(),
+
+    // check("location.ward", "Cung cấp Xã/Phường/Thị trấn").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.ward_code", "Cung cấp ward_code").optional().if(check("location").exists()).not().isEmpty(),
+    // check("location.ward_code", "ward_code phải là số").optional().if(check("location").exists()).isNumeric(),
 
     check("location.detail_location", "Cung cấp detail_location").optional().if(check("location").exists()).not().isEmpty(),
 

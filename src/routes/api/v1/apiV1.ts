@@ -1,5 +1,7 @@
 import ApiController from "@/controllers/apiV1/ApiController";
 import { genderV1Router } from "@/routes/api/v1/genderV1";
+import { locationV1Router } from "@/routes/api/v1/locationV1";
+import { miscV1Router } from "@/routes/api/v1/miscV1";
 import { roleV1Router } from "@/routes/api/v1/roleV1";
 import { roomServiceV1Router } from "@/routes/api/v1/roomServiceV1";
 import { roomTypeV1Router } from "@/routes/api/v1/roomTypeV1";
@@ -16,6 +18,8 @@ router.use("/roles", roleV1Router);
 router.use("/genders", genderV1Router);
 router.use("/room-services", roomServiceV1Router);
 router.use("/room-types", roomTypeV1Router);
+router.use("/location", locationV1Router);
+router.use("/misc", miscV1Router);
 
 router.use("/", ApiController.index);
 

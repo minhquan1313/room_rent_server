@@ -7,12 +7,10 @@ export interface IRoomLocation {
   room: Types.ObjectId;
   lat: number;
   long: number;
+  country: string;
   province: string;
-  province_code: number;
-  district: string;
-  district_code: number;
-  ward: string;
-  ward_code: number;
+  district?: string;
+  ward?: string;
   detail_location: string;
 
   updatedAt: Date;
@@ -42,29 +40,21 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
       type: Number,
       required: true,
     },
+    country: {
+      type: String,
+      required: true,
+    },
     province: {
       type: String,
       required: true,
     },
-    province_code: {
-      type: Number,
-      required: true,
-    },
     district: {
       type: String,
-      required: true,
-    },
-    district_code: {
-      type: Number,
-      required: true,
+      default: null,
     },
     ward: {
       type: String,
-      required: true,
-    },
-    ward_code: {
-      type: Number,
-      required: true,
+      default: null,
     },
     detail_location: {
       type: String,

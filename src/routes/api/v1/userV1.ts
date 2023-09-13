@@ -1,31 +1,45 @@
 import UserController from "@/controllers/apiV1/UserController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
-import { PermissionAdmin, PermissionPlaceOwner, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
-import UploaderMiddleware from "@/middlewares/UploaderMiddleware";
-import { ValidateMiddleware } from "@/middlewares/ValidateMiddleware";
-import { validateLoginUser, validateRegisterUser } from "@/models/User/User";
+import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
+import { PermissionAdminLvl2, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
+import { UploaderMiddlewareWithJson } from "@/middlewares/UploaderMiddleware";
+import { ValidateHasUploadFilesMiddleware, ValidateMiddleware } from "@/middlewares/ValidateMiddleware";
+import { validateLoginUser, validateRegisterUser, validateUpdateUser } from "@/models/User/User";
 import express from "express";
 
 // /api/v1/users
 const router = express.Router();
 
-router.get("/", AuthenticateMiddleware, UserController.get);
+router.get("/", CachedMiddleware(), AuthenticateMiddleware, PermissionAdminLvl2, UserController.get);
 router.get("/:userId", AuthenticateMiddleware, UserController.getSingle);
-
-router.post("/upload", UploaderMiddleware.single("file2"), UserController.upload);
-router.post("/upload-many", UploaderMiddleware.array("files2"), UserController.uploadMany);
 
 // router.post("/transfer-admin");
 router.post("/login-token", AuthenticateMiddleware, UserController.postLoginToken);
 router.post("/login", validateLoginUser(), ValidateMiddleware, UserController.postLogin);
-router.post("/", validateRegisterUser(), ValidateMiddleware, UserController.post);
+router.post(
+  "/",
+  //
+  UploaderMiddlewareWithJson("any"),
+  validateRegisterUser(),
+  ValidateHasUploadFilesMiddleware,
+  UserController.postCreateUser
+);
 
-router.patch("/image/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UploaderMiddleware.single("file"), UserController.patchImage);
-router.patch("/owner_banner/:userId", AuthenticateMiddleware, PermissionPlaceOwner, UploaderMiddleware.single("file"), UserController.patchOwnerBanner);
+// router.patch("/image/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UploaderMiddleware.single("file"), UserController.patchImage);
+// router.patch("/owner_banner/:userId", AuthenticateMiddleware, PermissionPlaceOwner, UploaderMiddleware.single("file"), UserController.patchOwnerBanner);
 
-router.patch("/role/:userId", AuthenticateMiddleware, PermissionAdmin, UserController.patchChangeRole);
+// router.patch("/role/:userId", AuthenticateMiddleware, PermissionAdmin, UserController.patchChangeRole);
 
-router.patch("/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UserController.patch);
+router.patch(
+  "/:userId",
+  //
+  AuthenticateMiddleware,
+  UserSelfChangeOrAdminMiddleware,
+  UploaderMiddlewareWithJson("any"),
+  validateUpdateUser(),
+  ValidateHasUploadFilesMiddleware,
+  UserController.patch
+);
 
 router.delete("/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UserController.delete);
 

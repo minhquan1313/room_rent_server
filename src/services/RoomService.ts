@@ -37,9 +37,10 @@ export type TRoomJSON = {
   available?: boolean;
 };
 export interface RoomSearchQuery {
+  kw?: string;
+
   services?: string;
   room_type?: string;
-  kw?: string;
   province?: string;
   district?: string;
   ward?: string;
@@ -147,7 +148,7 @@ class RoomService {
 
     await room.updateOne({
       ...rest,
-      room_type: room_type ? (await RoomType.findOne({ title: room_type })) ?? undefined : undefined,
+      room_type: (room_type && (await RoomType.findOne({ title: room_type }))) || undefined,
     });
 
     return await (await Room.findById(roomId))?.populateAll();
@@ -169,7 +170,7 @@ class RoomService {
 
     let i = 0;
     for await (const file of files) {
-      const newPath = await UploadService.userRoomImageFileUpload(file, userId, roomId);
+      const newPath = await UploadService.userRoomImageFileUpload({ file, roomId });
       const roomImage = await this.newImageUploaded(roomId, newPath.srcForDb, orders[i++]);
 
       uploadedImageIds.push(roomImage._id.toString());

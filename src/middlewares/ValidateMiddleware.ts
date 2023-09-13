@@ -19,11 +19,3 @@ export async function ValidateHasUploadFilesMiddleware(req: Request, res: Respon
   deleteUploadedTempFile(req);
   res.status(StatusCodes.BAD_REQUEST).json(errorResponse(errors.array()));
 }
-export async function ValidateHasUploadFileMiddleware(req: Request, res: Response, next: NextFunction) {
-  const errors = validationResult(req);
-  if (errors.isEmpty()) return next();
-
-  // fail
-  deleteUploadedTempFile(req);
-  res.status(StatusCodes.BAD_REQUEST).json(errorResponse(errors.array()));
-}

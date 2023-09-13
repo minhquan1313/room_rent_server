@@ -82,3 +82,17 @@ export async function UserSelfChangeOrAdminMiddleware(req: RequestAuthenticate, 
     return res.status(StatusCodes.FORBIDDEN).json(errorResponse(error.toString()));
   }
 }
+
+export async function PermissionUserRoleSet(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  const { roleTitle } = req;
+
+  if (!roleTitle) {
+    // create user
+  } else {
+  }
+
+  const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2", "owner", "user"];
+  if (acceptRoles.includes(roleTitle)) return next();
+
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("Bạn không có quyền làm việc này."));
+}

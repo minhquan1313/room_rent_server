@@ -33,8 +33,6 @@ export function UploaderMiddlewareWithJson<T extends MulterFunctionKeys>(type: T
     (req: Request, res: Response, next: NextFunction) => {
       try {
         const { json } = req.body;
-        console.log(`🚀 ~ FromDataJsonMiddleware ~ json:`, json);
-
         if (!json) return next();
 
         const jsonP = JSON.parse(json);

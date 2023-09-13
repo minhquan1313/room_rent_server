@@ -1,5 +1,6 @@
 import RoomController from "@/controllers/apiV1/RoomController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
+import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
 import { UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
 import { UploaderMiddlewareWithJson } from "@/middlewares/UploaderMiddleware";
 import { ValidateHasUploadFilesMiddleware } from "@/middlewares/ValidateMiddleware";
@@ -9,10 +10,7 @@ import express from "express";
 // /api/v1/rooms
 const router = express.Router();
 
-router.get("/exist-provinces", RoomController.getExistProvinces);
-router.get("/exist-districts", RoomController.getExistDistricts);
-router.get("/exist-wards", RoomController.getExistWards);
-router.get("/", RoomController.getAll);
+router.get("/", CachedMiddleware(), RoomController.getOrSearch);
 
 // router.post(
 //   "/image/:roomId",
@@ -24,11 +22,12 @@ router.get("/", RoomController.getAll);
 //   ValidateHasUploadFilesMiddleware,
 //   RoomController.postNewImagesToRoom
 // );
+
 router.post(
   "/",
   //
   AuthenticateMiddleware,
-  UploaderMiddlewareWithJson("array", "files"),
+  UploaderMiddlewareWithJson("any"),
   validateAddRoom(),
   ValidateHasUploadFilesMiddleware,
   RoomController.postAddRoom
@@ -39,7 +38,7 @@ router.patch(
   //
   AuthenticateMiddleware,
   UserSelfChangeOrAdminMiddleware,
-  UploaderMiddlewareWithJson("array", "files"),
+  UploaderMiddlewareWithJson("any"),
   validateEditRoom(),
   ValidateHasUploadFilesMiddleware,
   RoomController.patchEditRoom

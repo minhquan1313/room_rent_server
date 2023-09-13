@@ -5,7 +5,8 @@ import { Role, TRole } from "@/models/User/Role";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import RoomService from "@/services/RoomService";
-import { Types } from "mongoose";
+import UploadService from "@/services/UploadService";
+import mongoose, { Types } from "mongoose";
 
 export interface TUserJSON {
   username: string;
@@ -24,6 +25,9 @@ export interface TUserJSON {
 
   owner_banner?: string;
   email?: string;
+
+  file?: Express.Multer.File;
+  file_to?: "avatar" | "banner";
 }
 
 class UserService {
@@ -52,68 +56,88 @@ class UserService {
     }
   }
 
-  async createUser({ role, gender, email, tell, region_code, password, ...data }: TUserJSON) {
-    if (!process.env.PRIVATE_JWT_KEY) return null;
+  async createUser({ role, gender, email, tell, region_code, password, file, file_to, ...rest }: TUserJSON) {
+    const _id = new mongoose.mongo.ObjectId();
 
-    let _role;
+    if (file) {
+      switch (file_to) {
+        case "avatar":
+          rest.image = (await this.imageUpload(file, _id)).srcForDb;
+          break;
+        case "banner":
+          rest.owner_banner = (await this.imageUpload(file, _id)).srcForDb;
+          break;
 
-    switch (role) {
-      case "owner":
-        _role = await Role.getRoleOwner();
-        break;
-
-      default:
-        _role = await Role.getRoleUser();
-        break;
+        default:
+          rest.image = (await this.imageUpload(file, _id)).srcForDb;
+      }
     }
 
-    const encodedPassword = LoginTokenService.encodePassword(password);
     const user = await User.create({
-      ...data,
-      role: _role,
-      gender: (await Gender.findOne({ title: gender })) ?? undefined,
-      password: encodedPassword,
-    });
-
-    await user.addOrUpdatePhone(tell, region_code);
-
-    if (email) await user.addOrUpdateEmail(email);
-
-    // const _user = (await User.findPopulated({ _id: user._id }))[0];
-    return await user.populateAll();
-  }
-
-  async updateUser(userId: string, { email, tell, gender, region_code, password, role, ...f }: Partial<TUserJSON>) {
-    const user = await User.findById(userId);
-    if (!user) return null;
-
-    await user.updateOne({
-      ...f,
+      ...rest,
+      _id,
       password: password ? LoginTokenService.encodePassword(password) : undefined,
-      gender: gender ? (await Gender.findOne({ title: gender })) ?? undefined : undefined,
+      gender: (gender && (await Gender.findOne({ title: gender }))) || undefined,
+      role: (role && (await Role.findOne({ title: role }))) || undefined,
     });
 
     if (tell && region_code) await user.addOrUpdatePhone(tell, region_code);
 
     if (email) await user.addOrUpdateEmail(email);
 
-    return user.populateAll();
+    return await user.populateAll();
   }
-  async changeRole(userId: string | Types.ObjectId, role: TRole) {
-    const r = await Role.findOne({
-      title: role,
+
+  async updateUser(userId: string, { role, gender, email, tell, region_code, password, file, file_to, ...rest }: Partial<TUserJSON>) {
+    const user = (await User.findById(userId))!;
+
+    if (file) {
+      switch (file_to) {
+        case "avatar":
+          rest.image = (await this.imageUpload(file, user._id)).srcForDb;
+          break;
+        case "banner":
+          rest.owner_banner = (await this.imageUpload(file, user._id)).srcForDb;
+          break;
+
+        default:
+          rest.image = (await this.imageUpload(file, user._id)).srcForDb;
+      }
+    }
+
+    await user.updateOne({
+      ...rest,
+      password: password ? LoginTokenService.encodePassword(password) : undefined,
+      gender: (gender && (await Gender.findOne({ title: gender }))) || undefined,
+      role: (role && (await Role.findOne({ title: role }))) || undefined,
     });
-    const user = await User.findById(userId);
-    if (!r || !user) return null;
 
-    user.role = r._id;
+    if (tell && region_code) await user.addOrUpdatePhone(tell, region_code);
 
-    await user.save();
-
-    const _user = await (await User.findOne({ _id: userId }))?.populateAll();
-    return _user;
+    if (email) await user.addOrUpdateEmail(email);
   }
-  async getImageOfUser(userId: string) {}
+  // async changeRole(userId: string | Types.ObjectId, role: TRole) {
+  //   const r = await Role.findOne({
+  //     title: role,
+  //   });
+  //   const user = await User.findById(userId);
+  //   if (!r || !user) return null;
+
+  //   user.role = r._id;
+
+  //   await user.save();
+
+  //   const _user = await (await User.findOne({ _id: userId }))?.populateAll();
+  //   return _user;
+  // }
+  // async getImageOfUser(userId: string) {}
+  async imageUpload(file: Express.Multer.File, userId: string | Types.ObjectId) {
+    if (typeof userId !== "string") userId = userId.toString();
+
+    const newPath = await UploadService.userAvatarFileUpload({ file, userId });
+
+    return newPath;
+  }
 }
 
 export default new UserService();
