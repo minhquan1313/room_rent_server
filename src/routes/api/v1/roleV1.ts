@@ -1,5 +1,6 @@
 import RoleController from "@/controllers/apiV1/RoleController";
 import { AuthenticateMiddleware, IsAuthenticatedMiddleware } from "@/middlewares/AuthenticateMiddleware";
+import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
 import { PermissionAdmin } from "@/middlewares/PermissionMiddleware";
 import express from "express";
 
@@ -7,7 +8,7 @@ import express from "express";
 const router = express.Router();
 
 // router.get("/", AuthenticateMiddleware, RoleController.getAll);
-router.get("/", IsAuthenticatedMiddleware, RoleController.getAll);
+router.get("/", CachedMiddleware(), IsAuthenticatedMiddleware, RoleController.getAll);
 
 router.post("/", AuthenticateMiddleware, PermissionAdmin, RoleController.postAdd);
 

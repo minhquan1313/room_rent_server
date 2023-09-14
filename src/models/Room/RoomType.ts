@@ -1,7 +1,7 @@
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import mongoose, { Model, Schema, Types } from "mongoose";
 
-export type TRoomType = "cc" | "nr" | "nt";
+export type TRoomType = "cc" | "nr" | "nt" | "ktx" | "ccm" | "ttncc";
 export interface IRoomType {
   _id: Types.ObjectId;
   title: string;
@@ -54,6 +54,18 @@ async function createRoomTypeOnStart() {
     {
       title: "nt",
       display_name: "Nhà trọ",
+    },
+    {
+      title: "ktx",
+      display_name: "Ký túc xá",
+    },
+    {
+      title: "ccm",
+      display_name: "Chung cư mini",
+    },
+    {
+      title: "ttncc",
+      display_name: "Trọ trong nhà chung chủ",
     },
   ];
 

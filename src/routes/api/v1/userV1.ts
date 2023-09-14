@@ -1,7 +1,7 @@
 import UserController from "@/controllers/apiV1/UserController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
 import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
-import { PermissionAdminLvl2, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
+import { PermissionAdmin, PermissionAdminLvl2, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
 import { UploaderMiddlewareWithJson } from "@/middlewares/UploaderMiddleware";
 import { ValidateHasUploadFilesMiddleware, ValidateMiddleware } from "@/middlewares/ValidateMiddleware";
 import { validateLoginUser, validateRegisterUser, validateUpdateUser } from "@/models/User/User";
@@ -41,6 +41,6 @@ router.patch(
   UserController.patch
 );
 
-router.delete("/:userId", AuthenticateMiddleware, UserSelfChangeOrAdminMiddleware, UserController.delete);
+router.delete("/:userId", AuthenticateMiddleware, PermissionAdmin, UserController.delete);
 
 export { router as userV1Router };

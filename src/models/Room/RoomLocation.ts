@@ -11,7 +11,7 @@ export interface IRoomLocation {
   province: string;
   district?: string;
   ward?: string;
-  detail_location: string;
+  detail_location?: string;
 
   updatedAt: Date;
   createdAt: Date;
@@ -58,7 +58,7 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
     },
     detail_location: {
       type: String,
-      required: true,
+      default: null,
     },
   },
   {

@@ -1,12 +1,13 @@
 import GenderController from "@/controllers/apiV1/GenderController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
+import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
 import { PermissionAdmin } from "@/middlewares/PermissionMiddleware";
 import express from "express";
 
 // /api/v1/genders
 const router = express.Router();
 
-router.get("/", GenderController.getAll);
+router.get("/", CachedMiddleware(), GenderController.getAll);
 
 router.post("/", AuthenticateMiddleware, PermissionAdmin, GenderController.postAdd);
 

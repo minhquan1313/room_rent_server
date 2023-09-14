@@ -1,34 +1,58 @@
+import { errorResponse } from "@/Utils/errorRes";
+import Location3rdVNService from "@/services/Location3rdVNService";
 import RoomLocationService, { LocationSearchQuery } from "@/services/RoomLocationService";
+import { Location3rd } from "@/types/Location3rd";
 import { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
 class RoomLocationController {
-  async getExistCountries(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistCountries();
+  async getCountries(req: Request, res: Response, next: NextFunction) {
+    try {
+      const results = await RoomLocationService.getCountries(req.query);
 
-    res.json(results);
-  }
-  async getExistProvinces(req: Request, res: Response, next: NextFunction) {
-    const { country }: LocationSearchQuery = req.query;
-    console.log(`🚀 ~ RoomLocationController ~ getExistProvinces ~ country:`, country);
+      // if(Object.keys(req.query).)
 
-    let results;
-    if (country) {
-      results = await RoomLocationService.getProvinceBaseOnCountry(country);
-    } else {
-      results = await RoomLocationService.getExistProvinces();
+      res.json(results);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
-
-    res.json(results);
   }
-  async getExistDistricts(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistDistricts();
+  async getProvinces(req: Request, res: Response, next: NextFunction) {
+    try {
+      const results = await RoomLocationService.getProvinces(req.query);
 
-    res.json(results);
+      res.json(results);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
   }
-  async getExistWards(req: Request, res: Response, next: NextFunction) {
-    const results = await RoomLocationService.getExistWards();
+  async getDistricts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const results = await RoomLocationService.getDistricts(req.query);
 
-    res.json(results);
+      res.json(results);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
+  }
+  async getWards(req: Request, res: Response, next: NextFunction) {
+    try {
+      const results = await RoomLocationService.getWards(req.query);
+
+      res.json(results);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
+  }
+  async getResolve(req: Request, res: Response, next: NextFunction) {
+    try {
+      const results = await RoomLocationService.resolve(req.query);
+
+      // const results = await RoomLocationService.resolve(req.query);
+      res.json(results);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
   }
 }
 

@@ -1,7 +1,34 @@
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import mongoose, { Model, Schema, Types } from "mongoose";
 
-export type TRoomService = "wifi" | "mt" | "center" | "hood" | "security" | "parking";
+export type TRoomService =
+  | "wifi"
+  | "mt"
+  | "tttp"
+  | "nth"
+  | "anc"
+  | "hgx"
+  | "og"
+  | "gl"
+  | "bnl"
+  | "kb"
+  | "mg"
+  | "dh"
+  | "tl"
+  | "gn"
+  | "taq"
+  | "bct"
+  | "bdxr"
+  | "can"
+  | "hb"
+  | "sv"
+  | "c"
+  | "st"
+  | "bv"
+  | "th"
+  | "cv"
+  | "bxb"
+  | "tttdtt";
 export interface IRoomService {
   _id: Types.ObjectId;
 
@@ -47,27 +74,111 @@ async function createRoomServicesOnStart() {
   })[] = [
     {
       title: "wifi",
-      display_name: "Wifi free",
+      display_name: "Wifi",
     },
     {
       title: "mt",
       display_name: "Mặt tiền",
     },
     {
-      title: "center",
+      title: "tttp",
       display_name: "Trung tâm thành phố",
     },
     {
-      title: "hood",
+      title: "nth",
       display_name: "Nhà trong hẻm",
     },
     {
-      title: "security",
+      title: "anc",
       display_name: "An ninh cao",
     },
     {
-      title: "parking",
-      display_name: "Có hầm gửi xe",
+      title: "hgx",
+      display_name: "Hầm gửi xe",
+    },
+    {
+      title: "og",
+      display_name: "Ở ghép",
+    },
+    {
+      title: "gl",
+      display_name: "Gác lửng",
+    },
+    {
+      title: "bnl",
+      display_name: "Bình nóng lạnh",
+    },
+    {
+      title: "kb",
+      display_name: "Kệ bếp",
+    },
+    {
+      title: "mg",
+      display_name: "Máy giặt",
+    },
+    {
+      title: "dh",
+      display_name: "Điều hòa",
+    },
+    {
+      title: "tl",
+      display_name: "Tủ lạnh",
+    },
+    {
+      title: "gn",
+      display_name: "Giường nệm",
+    },
+    {
+      title: "taq",
+      display_name: "Tủ áo quần",
+    },
+    {
+      title: "bct",
+      display_name: "Ban công/sân thượng",
+    },
+    {
+      title: "bdxr",
+      display_name: "Bãi để xe riêng",
+    },
+    {
+      title: "can",
+      display_name: "Camera an ninh",
+    },
+    {
+      title: "hb",
+      display_name: "Hồ bơi",
+    },
+    {
+      title: "sv",
+      display_name: "Sân vườn",
+    },
+    {
+      title: "c",
+      display_name: "Chợ",
+    },
+    {
+      title: "st",
+      display_name: "Siêu thị",
+    },
+    {
+      title: "bv",
+      display_name: "Bệnh viện",
+    },
+    {
+      title: "th",
+      display_name: "Trường học",
+    },
+    {
+      title: "cv",
+      display_name: "Công viên",
+    },
+    {
+      title: "bxb",
+      display_name: "Bến xe Bus",
+    },
+    {
+      title: "tttdtt",
+      display_name: "Trung tâm thể dục thể thao",
     },
   ];
 
