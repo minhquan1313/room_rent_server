@@ -6,7 +6,7 @@ import RoleService from "@/services/RoleService";
 import UserService from "@/services/UserService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
-import { Model, Schema, Types, model } from "mongoose";
+import { Model, Query, Schema, Types, model } from "mongoose";
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -34,7 +34,7 @@ interface IUserMethods {
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
   // static methods
-  findPopulated(query: Partial<IUser>): Promise<UserDocument[]>;
+  findPopulated(query: Partial<IUser>): Query<UserDocument[], UserDocument, unknown, any, "find">;
 }
 
 export type UserDocument = MongooseDocConvert<IUser, IUserMethods>;
@@ -180,32 +180,30 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
       },
     },
     statics: {
-      async findPopulated(query) {
-        return await model("User")
-          .find(query)
-          //
-          .populate("role")
-          .populate("phone")
-          .populate("email")
-          .populate("gender");
+      findPopulated(query) {
+        return (
+          model("User")
+            .find(query)
+            //
+            .populate([
+              {
+                path: "gender",
+              },
+              {
+                path: "role",
+              },
+              {
+                path: "phone",
+              },
+              {
+                path: "email",
+              },
+            ])
+        );
       },
     },
   }
 );
-
-// function autoPopulate(this: any, next: () => void) {
-//   this.populate("email").populate("phone").populate("role").populate("gender");
-//   next();
-// }
-// schema.pre("findOne", autoPopulate);
-
-// schema.pre("find", function (next) {
-//   this.sort({
-//     createdAt: -1,
-//   });
-
-//   next();
-// });
 
 const User = model<IUser, UserModel>("User", schema);
 

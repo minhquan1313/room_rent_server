@@ -1,4 +1,5 @@
 import { RoomImage, RoomImageDocument } from "@/models/Room/RoomImage";
+import UploadService from "@/services/UploadService";
 
 class RoomImageService {
   async reOrderImages(roomId: string): Promise<RoomImageDocument[]> {
@@ -42,6 +43,36 @@ class RoomImageService {
         }
       );
     }
+  }
+
+  async roomImagesUpload(files: Express.Multer.File[], userId: string, roomId: string, autoOrder: boolean | number[] = false) {
+    const uploadedImageIds: string[] = [];
+
+    let orders: (undefined | number)[];
+
+    if (autoOrder === true) {
+      orders = files.map((r, i) => i + 1);
+    } else if (Array.isArray(autoOrder)) {
+      orders = files.map((r, i) => autoOrder[i]);
+    } else {
+      orders = Array(files.length).fill(undefined);
+    }
+    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ autoOrder:`, autoOrder);
+    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ orders:`, orders);
+
+    let i = 0;
+    for await (const file of files) {
+      const newPath = await UploadService.userRoomImageFileUpload({ file, roomId });
+      const roomImage = await RoomImage.create({
+        room: roomId,
+        image: newPath.srcForDb,
+        order: orders[i++],
+      });
+
+      uploadedImageIds.push(roomImage._id.toString());
+    }
+
+    return uploadedImageIds;
   }
 }
 

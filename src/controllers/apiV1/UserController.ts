@@ -167,6 +167,7 @@ class UserController {
   async patch(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { userId } = req.params;
+      req.body.file = req.file;
 
       const user = await UserService.updateUser(userId, req.body);
 

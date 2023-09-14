@@ -8,7 +8,7 @@ import RoomImageService from "@/services/RoomImageService";
 import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
-import { FilterQuery, Model, Schema, Types, isValidObjectId, model } from "mongoose";
+import { FilterQuery, Model, Query, Schema, Types, isValidObjectId, model } from "mongoose";
 
 export interface IRoom {
   _id: Types.ObjectId;
@@ -52,7 +52,7 @@ interface IRoomMethods {
 
 interface RoomModel extends Model<IRoom, {}, IRoomMethods> {
   // static methods
-  findPopulated(query: FilterQuery<IRoom>): Promise<RoomDocument[]>;
+  findPopulated(query: FilterQuery<IRoom>): Query<RoomDocument[], RoomDocument, unknown, any, "find">;
 }
 export type RoomDocument = MongooseDocConvert<IRoom, IRoomMethods>;
 
@@ -305,8 +305,8 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       },
     },
     statics: {
-      async findPopulated(query) {
-        return await model("Room")
+      findPopulated(query) {
+        return model("Room")
           .find(query)
           .populate([
             {

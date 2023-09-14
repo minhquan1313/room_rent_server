@@ -34,7 +34,7 @@ class RoomController {
 
       if (Array.isArray(files)) {
         // Add image to room later
-        const imgIds = await RoomService.roomImagesUpload(files, userId, roomId, true);
+        const imgIds = await RoomImageService.roomImagesUpload(files, userId, roomId, true);
         await RoomService.update(roomId, { images: imgIds });
       }
 
@@ -58,7 +58,7 @@ class RoomController {
 
       let newImagesIds: string[] = Array.isArray(images) ? images : [];
       if (Array.isArray(files)) {
-        newImagesIds.push(...(await RoomService.roomImagesUpload(files, userId, roomId, imagesOrders)));
+        newImagesIds.push(...(await RoomImageService.roomImagesUpload(files, userId, roomId, imagesOrders)));
       }
 
       const room = await RoomService.update(roomId, {

@@ -4,8 +4,7 @@ import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
 import { RoomService as RoomService_, TRoomService } from "@/models/Room/RoomService";
 import { RoomType, TRoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
-import UploadService from "@/services/UploadService";
-import { FilterQuery, Types } from "mongoose";
+import mongoose, { FilterQuery, Types } from "mongoose";
 
 export type TRoomJSON = {
   owner?: string;
@@ -103,14 +102,13 @@ class RoomService {
     }
 
     console.log(`🚀 ~ RoomService ~ getAll ~ searchQuery:`, searchQuery);
-    // const docs = await Room.findPopulated({
     console.log(`🚀 ~ RoomService ~ getAll ~ console:`, {
       ...searchQuery,
     });
 
     //   ...searchQuery,
     // });
-    const docs = await Room.find({
+    const docs = await Room.findPopulated({
       ...searchQuery,
     })
       .sort({
@@ -119,15 +117,18 @@ class RoomService {
       .skip(pageSize * (page - 1))
       .limit(pageSize);
 
-    for await (const doc of docs) {
-      await doc.populateAll();
-    }
+    // for await (const doc of docs) {
+    //   await doc.populateAll();
+    // }
 
     return docs;
   }
   async create(userId: string | Types.ObjectId, { services, room_type, images, location, ...rest }: TRoomJSON) {
+    const _id = new mongoose.mongo.ObjectId();
+
     const room = await Room.create({
       ...rest,
+      _id,
       room_type: await RoomType.findOne({ title: room_type }),
       owner: userId,
     });
@@ -153,40 +154,7 @@ class RoomService {
 
     return await (await Room.findById(roomId))?.populateAll();
   }
-  async roomImagesUpload(files: Express.Multer.File[], userId: string, roomId: string, autoOrder: boolean | number[] = false) {
-    const uploadedImageIds: string[] = [];
 
-    let orders: (undefined | number)[];
-
-    if (autoOrder === true) {
-      orders = files.map((r, i) => i + 1);
-    } else if (Array.isArray(autoOrder)) {
-      orders = files.map((r, i) => autoOrder[i]);
-    } else {
-      orders = Array(files.length).fill(undefined);
-    }
-    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ autoOrder:`, autoOrder);
-    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ orders:`, orders);
-
-    let i = 0;
-    for await (const file of files) {
-      const newPath = await UploadService.userRoomImageFileUpload({ file, roomId });
-      const roomImage = await this.newImageUploaded(roomId, newPath.srcForDb, orders[i++]);
-
-      uploadedImageIds.push(roomImage._id.toString());
-    }
-
-    return uploadedImageIds;
-  }
-  async newImageUploaded(roomId: string | Types.ObjectId, src: string, order?: number) {
-    const ri = await RoomImage.create({
-      room: roomId,
-      image: src,
-      order,
-    });
-
-    return ri;
-  }
   async delete(roomId: string | Types.ObjectId) {
     const room = await Room.findById(roomId);
     if (!room) return false;
