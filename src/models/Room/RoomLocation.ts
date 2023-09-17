@@ -66,6 +66,8 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
   }
 );
 
+schema.index({ lat: "2dsphere", long: "2dsphere" });
+
 const RoomLocation = mongoose.model<IRoomLocation, RoomTypeModel>("RoomLocation", schema);
 
 export { RoomLocation };

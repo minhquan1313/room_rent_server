@@ -1,3 +1,4 @@
+import { proximityThreshold } from "@/constants/constants";
 import { IRoom, Room } from "@/models/Room/Room";
 import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
@@ -69,6 +70,10 @@ export interface RoomSearchQuery {
   sort_field?: string;
   sort?: 1 | -1;
 
+  search_close_to?: string | boolean;
+  search_close_to_lat?: string;
+  search_close_to_long?: string;
+
   // owner?: string;
   // ...
   // ?services=wifi,mt
@@ -80,8 +85,8 @@ export interface RoomSearchQuery {
 }
 class RoomService {
   async getAll({
-    limit = 100,
-    page = 1,
+    limit,
+    page,
 
     services,
     kw,
@@ -102,6 +107,10 @@ class RoomService {
     number_of_bathroom_to,
     number_of_floor_from,
     number_of_floor_to,
+
+    search_close_to,
+    search_close_to_lat,
+    search_close_to_long,
 
     sort_field,
     sort,
@@ -223,7 +232,28 @@ class RoomService {
       }
     }
 
-    if (province || district || ward) {
+    if (search_close_to === "true") {
+      const lat = Number(search_close_to_lat);
+      const long = Number(search_close_to_long);
+      if (lat && long) {
+        const z = await RoomLocation.aggregate([
+          {
+            $geoNear: {
+              near: {
+                type: "Point",
+                coordinates: [long, lat],
+              },
+              distanceField: "distance",
+              maxDistance: proximityThreshold,
+              spherical: true,
+            },
+          },
+        ]);
+        console.log(`🚀 ~ RoomService ~ z:`, z);
+
+        return [];
+      }
+    } else if (province || district || ward) {
       const obj: FilterQuery<IRoomLocation> = {};
       if (province) obj.province = province;
       if (district) obj.district = district;
@@ -244,12 +274,24 @@ class RoomService {
 
     //   ...searchQuery,
     // });
-    const docs = await Room.findPopulated({
+    const query_ = Room.findPopulated({
       ...searchQuery,
-    })
-      .sort([[sort_field ?? "createdAt", sort ?? -1]])
-      .skip(limit * (page - 1))
-      .limit(limit);
+    });
+
+    if (sort_field) {
+      query_.sort([[sort_field, sort ?? -1]]);
+    }
+
+    if (limit) {
+      query_.limit(limit);
+      if (page) {
+        query_.skip(limit * (page - 1));
+      }
+    }
+
+    query_.lean();
+
+    const docs = await query_.exec();
 
     // for await (const doc of docs) {
     //   await doc.populateAll();

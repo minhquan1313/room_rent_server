@@ -36,7 +36,6 @@ class RoomLocationService {
           province: 1,
         })
         .distinct("province");
-      console.log(`🚀 ~ RoomLocationService ~ getProvinces ~ results:`, results);
     } else {
       // if (typeof country === "string") {
       // const n = parseInt(country);
@@ -58,9 +57,9 @@ class RoomLocationService {
         })
         .distinct("district");
     } else {
-      if (typeof province === "string") {
-        results = await Location3rdVNService.getDistricts(province);
-      }
+      // if (typeof province === "string") {
+      results = await Location3rdVNService.getDistricts(province);
+      // }
     }
 
     return results;
@@ -76,9 +75,9 @@ class RoomLocationService {
         })
         .distinct("ward");
     } else {
-      if (typeof district === "string") {
-        results = await Location3rdVNService.getWards(district);
-      }
+      // if (typeof district === "string") {
+      results = await Location3rdVNService.getWards(district);
+      // }
     }
 
     return results;
@@ -89,7 +88,7 @@ class RoomLocationService {
     if (!country || typeof country !== "string") return {};
 
     let result: {
-      [k in keyof LocationSearchQuery]: Location3rd;
+      [k in keyof Omit<LocationSearchQuery, "all">]: Location3rd;
     } = {};
 
     switch (country.toLowerCase()) {

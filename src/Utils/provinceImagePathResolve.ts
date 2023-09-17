@@ -4,9 +4,9 @@ const objs: {
   [k: string]: string;
 } = {
   "ho chi minh": "/provinceImages/hoChiMinh.jpg",
-  "ha noi": "/provinceImages/hoChiMinh.jpg",
+  "ha noi": "/provinceImages/haNoi.jpg",
 };
-// console.log(`🚀 ~ objs:`, objs);
+
 export function provinceImagePathResolve(province?: string) {
   if (!province) return "";
 

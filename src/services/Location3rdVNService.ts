@@ -13,18 +13,26 @@ type FetchData = {
   name: string;
   code: string;
 }[];
-fetcher.interceptors.response.use(function (response) {
-  const data = response.data as IWardResponse | IDistrictResponse | IProvinceResponse;
+fetcher.interceptors.response.use(
+  function (response) {
+    const data = response.data as IWardResponse | IDistrictResponse | IProvinceResponse;
 
-  return Array.isArray(data.data)
-    ? []
-    : (data.data.data.map((e) => ({
-        name: e.name_with_type,
-        code: e.code,
-      })) as any);
+    return Array.isArray(data.data)
+      ? []
+      : (data.data.data.map((e) => ({
+          name: e.name_with_type,
+          code: e.code,
+        })) as any);
 
-  // return response.data;
-});
+    // return response.data;
+  },
+  function (error) {
+    // throw error;
+
+    // if (error?.response?.status !== 304)
+    return Promise.reject(error);
+  }
+);
 
 class Location3rdVNService {
   async getCountries(): Promise<Location3rd[]> {
@@ -36,59 +44,77 @@ class Location3rdVNService {
     ];
   }
   // Tỉnh/Thành phố
-  async getProvinces(countryCode?: string): Promise<Location3rd[]> {
-    const data = await fetcher.get<never, FetchData>("/provinces/getAll?limit=-1");
+  async getProvinces(countryCode?: unknown): Promise<Location3rd[]> {
+    try {
+      const data = await fetcher.get<never, FetchData>("/provinces/getAll?limit=-1");
 
-    return data;
+      return data;
+    } catch (error) {
+      return [];
+    }
   }
 
   // Huyện/Thị xã/Thành phố
-  async getDistricts(provinceCode?: string): Promise<Location3rd[]> {
-    // if (provinceCode && !parseInt(provinceCode)) {
-    //   const d = await this.resolveProvince(provinceCode);
+  async getDistricts(provinceCode?: unknown): Promise<Location3rd[]> {
+    try {
+      const url =
+        typeof provinceCode === "string" && provinceCode
+          ? //
+            `/districts/getByProvince?provinceCode=${provinceCode}&limit=-1`
+          : `/districts/getAll`;
+      const data = await fetcher.get<never, FetchData>(url);
 
-    //   if (!d) return [];
-
-    //   provinceCode = d.code;
-    // }
-
-    const url = provinceCode
-      ? //
-        `/districts/getByProvince?provinceCode=${provinceCode}&limit=-1`
-      : `/districts/getAll`;
-    const data = await fetcher.get<never, FetchData>(url);
-
-    return data;
+      return data;
+    } catch (error) {
+      return [];
+    }
   }
 
   // Xã/Phường/Thị trấn
-  async getWards(districtCode?: string): Promise<Location3rd[]> {
-    const url = districtCode
-      ? //
-        `/wards/getByDistrict?districtCode=${districtCode}&limit=-1`
-      : `/getAll/getAll`;
-    const data = await fetcher.get<never, FetchData>(url);
+  async getWards(districtCode?: unknown): Promise<Location3rd[]> {
+    try {
+      const url =
+        typeof districtCode === "string" && districtCode
+          ? //
+            `/wards/getByDistrict?districtCode=${districtCode}&limit=-1`
+          : `/wards/getAll`;
+      const data = await fetcher.get<never, FetchData>(url);
 
-    return data;
+      return data;
+    } catch (error) {
+      return [];
+    }
   }
 
-  async resolveProvince(value: string) {
-    const url = `/provinces/getAll?q=${value}&cols=name,name_with_type`;
-    const data = await fetcher.get<never, FetchData>(url);
+  async resolveProvince(value: string): Promise<Location3rd | null> {
+    try {
+      const url = `/provinces/getAll?q=${value}&cols=name,name_with_type`;
+      const data = await fetcher.get<never, FetchData>(url);
 
-    return data.length ? data[0] : null;
+      return data.length ? data[0] : null;
+    } catch (error) {
+      return null;
+    }
   }
-  async resolveDistrict(value: string) {
-    const url = `/districts/getAll?q=${value}&cols=name,name_with_type`;
-    const data = await fetcher.get<never, FetchData>(url);
+  async resolveDistrict(value: string): Promise<Location3rd | null> {
+    try {
+      const url = `/districts/getAll?q=${value}&cols=name,name_with_type`;
+      const data = await fetcher.get<never, FetchData>(url);
 
-    return data.length ? data[0] : null;
+      return data.length ? data[0] : null;
+    } catch (error) {
+      return null;
+    }
   }
-  async resolveWard(value: string) {
-    const url = `/wards/getAll?q=${value}&cols=name,name_with_type`;
-    const data = await fetcher.get<never, FetchData>(url);
+  async resolveWard(value: string): Promise<Location3rd | null> {
+    try {
+      const url = `/wards/getAll?q=${value}&cols=name,name_with_type`;
+      const data = await fetcher.get<never, FetchData>(url);
 
-    return data.length ? data[0] : null;
+      return data.length ? data[0] : null;
+    } catch (error) {
+      return null;
+    }
   }
 }
 

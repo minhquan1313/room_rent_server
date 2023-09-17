@@ -26,7 +26,7 @@ export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: Cached
       res.sendResponse = res.send;
       (res as any).send = (body: any) => {
         cache.put(key, body, duration); // duration tính bằng giây
-        console.log(`🚀 ~ CachedMiddleware ~ key:`, key);
+        // console.log(`🚀 ~ CachedMiddleware ~ key:`, key);
 
         res.sendResponse!(body);
       };
