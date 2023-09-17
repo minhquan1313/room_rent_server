@@ -14,12 +14,13 @@ const DEFAULT_CACHE_TIME = 60000; //ms
 
 export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: CachedParams = {}) => {
   return (req: Request, res: ResponseCached, next: NextFunction) => {
-    const key = "__express__" + req.originalUrl || req.url + key_;
+    const key = "__express__" + req.originalUrl || req.url + (key_ ?? "");
 
     const cachedBody = cache.get(key);
 
     if (cachedBody) {
       res.send(cachedBody);
+      // res.status(HttpStatusCode.NotModified).send(cachedBody);
       return;
     } else {
       res.sendResponse = res.send;

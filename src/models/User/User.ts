@@ -34,7 +34,7 @@ interface IUserMethods {
 
 interface UserModel extends Model<IUser, {}, IUserMethods> {
   // static methods
-  findPopulated(query: Partial<IUser>): Query<UserDocument[], UserDocument, unknown, any, "find">;
+  findPopulated(query?: Partial<IUser>): Query<UserDocument[], UserDocument, unknown, any, "find">;
 }
 
 export type UserDocument = MongooseDocConvert<IUser, IUserMethods>;

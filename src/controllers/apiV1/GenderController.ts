@@ -13,7 +13,7 @@ class GenderController {
   }
   // /api/v1/genders/
   async getAll(req: Request, res: Response, next: NextFunction) {
-    const docs = await Gender.find();
+    const docs = await Gender.find().lean();
 
     res.json(docs);
   }

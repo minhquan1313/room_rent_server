@@ -1,13 +1,12 @@
 import { autoTitle } from "@/Utils/autoTitle";
 import { RoomServiceDocument } from "@/models/Room/RoomService";
 import { RoomServiceCategory, RoomServiceCategoryDocument } from "@/models/Room/RoomServiceCategory";
-import { RoomServiceInCategory } from "@/models/Room/RoomServiceInCategory";
 
 export type RoomServiceCategoryPayload = {
   display_name: string;
 };
 export type ServicesInCategory = {
-  category: RoomServiceCategoryDocument;
+  category: RoomServiceCategoryDocument | "unknown";
   services: RoomServiceDocument[];
 };
 class RoomServiceCategoryService {
@@ -20,62 +19,67 @@ class RoomServiceCategoryService {
     return await RoomServiceCategory.create({ display_name, title });
   }
 
-  async addServiceToCategory(service: string, category: string) {
-    return await RoomServiceInCategory.create({
-      category,
-      service,
-    });
+  async getAll() {
+    return await RoomServiceCategory.find();
   }
 
-  async getServicesInCategory() {
-    const items: ServicesInCategory[] = await RoomServiceInCategory.aggregate([
-      {
-        $lookup: {
-          from: "roomservices",
-          localField: "service",
-          foreignField: "_id",
-          as: "service_info",
-        },
-      },
-      {
-        $lookup: {
-          from: "roomservicecategories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category_info",
-        },
-      },
-      {
-        $unwind: "$service_info",
-      },
-      {
-        $unwind: "$category_info",
-      },
-      {
-        $project: {
-          _id: 0,
-          "category_info.title": 1, // Chọn trường title của category_info
-          service_info: 1, // Giữ nguyên thông tin service_info
-          category: {
-            $cond: {
-              if: { $eq: ["$category_info", null] },
-              then: "unknown",
-              else: "$category_info", // Giữ nguyên giá trị category_info
-            },
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$category", // Nhóm theo category thay vì category.title
-          category: { $first: "$category" },
-          services: { $push: "$service_info" },
-        },
-      },
-    ]);
+  // async addServiceToCategory(service: string, category: string) {
+  //   return await RoomServiceInCategory.create({
+  //     category,
+  //     service,
+  //   });
+  // }
 
-    return items;
-  }
+  // async getServicesInCategory() {
+  //   const items: ServicesInCategory[] = await RoomServiceInCategory.aggregate([
+  //     {
+  //       $lookup: {
+  //         from: "roomservices", // Tên của bảng RoomService
+  //         localField: "service",
+  //         foreignField: "_id",
+  //         as: "service_info",
+  //       },
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: "roomservicecategories", // Tên của bảng RoomServiceCategory
+  //         localField: "category",
+  //         foreignField: "_id",
+  //         as: "category_info",
+  //       },
+  //     },
+  //     {
+  //       $unwind: "$service_info",
+  //     },
+  //     {
+  //       $unwind: "$category_info",
+  //     },
+  //     {
+  //       $group: {
+  //         _id: "$category_info._id", // Nhóm theo _id của RoomServiceCategory
+  //         category: { $first: "$category_info" }, // Lấy thông tin đầu tiên của RoomServiceCategory
+  //         services: { $push: "$service_info" }, // Tạo mảng services từ RoomService
+  //       },
+  //     },
+  //   ]);
+
+  //   const serviceIds = await RoomServiceInCategory.find().distinct("service");
+
+  //   const notIn = await RoomService.find({
+  //     _id: {
+  //       $nin: serviceIds,
+  //     },
+  //   }).lean();
+
+  //   if (notIn.length) {
+  //     items.push({
+  //       category: "unknown",
+  //       services: notIn as any,
+  //     });
+  //   }
+
+  //   return items;
+  // }
 }
 
 export default new RoomServiceCategoryService();

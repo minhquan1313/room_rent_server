@@ -7,7 +7,6 @@ export interface IRoomServiceCategory {
 
   title: TRoomServiceCategory;
   display_name: string | null;
-  services: Types.ObjectId[];
 
   updatedAt: Date;
   createdAt: Date;
@@ -32,12 +31,6 @@ const schema = new Schema<IRoomServiceCategory, RoomServiceCategoryModel, IRoomS
       type: String,
       default: null,
     },
-    services: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "RoomService",
-      },
-    ],
   },
   {
     timestamps: true,
@@ -58,7 +51,7 @@ async function createRoomServiceCategoryOnStart() {
     },
     {
       title: "mt",
-      display_name: "Môi trường",
+      display_name: "Xung quanh",
     },
   ];
 

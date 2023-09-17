@@ -1,6 +1,6 @@
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import { moveFileFs } from "@/Utils/moveFileFs";
-import { publicStaticUser } from "@/index";
+import { publicStaticUser } from "@/constants/constants";
 import fs from "fs";
 import path from "path";
 

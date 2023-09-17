@@ -1,6 +1,5 @@
 import { createRoomServicesOnStart } from "@/models/Room/RoomService";
 import { createRoomServiceCategoryOnStart } from "@/models/Room/RoomServiceCategory";
-import { createRoomServiceInCategoryOnStart } from "@/models/Room/RoomServiceInCategory";
 import { createRoomTypeOnStart } from "@/models/Room/RoomType";
 import { createGenderOnStart } from "@/models/User/Gender";
 import { autoCreateRolesOnStart } from "@/models/User/Role";
@@ -30,11 +29,4 @@ export async function doPreload() {
 
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
-  await createRoomServiceInCategoryOnStart();
-
-  //
-
-  // const l = await RoomServiceCategoryService.getServicesInCategory();
-
-  // console.log(`🚀 ~ doPreload ~ l:`, l);
 }

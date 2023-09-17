@@ -1,13 +1,13 @@
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import preload from "@/Utils/preload";
 import db from "@/config/db";
+import { publicStaticServer, publicStaticUser } from "@/constants/constants";
 import router from "@/routes";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
-import path from "path";
 
 console.clear();
 
@@ -18,9 +18,6 @@ db.connect().catch(() => {
 
 preload();
 
-export const publicStaticServer = path.join(__dirname, "static");
-
-export const publicStaticUser = path.join(process.cwd(), "userDataUpload");
 createFolderFsSync(publicStaticUser);
 
 const corsOptions = {

@@ -1,4 +1,4 @@
-import { publicStaticServer } from "@/index";
+import { publicStaticServer } from "@/constants/constants";
 import { apiRouter } from "@/routes/api/api";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";

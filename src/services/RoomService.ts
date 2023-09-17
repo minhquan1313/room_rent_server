@@ -38,16 +38,37 @@ export type TRoomJSON = {
 export interface RoomSearchQuery {
   kw?: string;
 
-  services?: string;
+  services?: string[];
   room_type?: string;
   province?: string;
   district?: string;
   ward?: string;
 
-  pageSize?: number;
+  limit?: number;
   page?: number;
 
-  number_of_floor?: number;
+  usable_area: number;
+  usable_area_from?: number;
+  usable_area_to?: number;
+
+  price_per_month_from?: number;
+  price_per_month_to?: number;
+
+  number_of_living_room_from?: number;
+  number_of_living_room_to?: number;
+
+  number_of_bedroom_from?: number;
+  number_of_bedroom_to?: number;
+
+  number_of_bathroom_from?: number;
+  number_of_bathroom_to?: number;
+
+  number_of_floor_from?: number;
+  number_of_floor_to?: number;
+
+  sort_field?: string;
+  sort?: 1 | -1;
+
   // owner?: string;
   // ...
   // ?services=wifi,mt
@@ -58,34 +79,150 @@ export interface RoomSearchQuery {
   // ?ward=adwwd
 }
 class RoomService {
-  async getAll({ pageSize = 100, page = 1, services, room_type, kw, province, district, ward, ...query }: RoomSearchQuery) {
+  async getAll({
+    limit = 100,
+    page = 1,
+
+    services,
+    kw,
+    room_type,
+    province,
+    district,
+    ward,
+
+    usable_area_from,
+    usable_area_to,
+    price_per_month_from,
+    price_per_month_to,
+    number_of_living_room_from,
+    number_of_living_room_to,
+    number_of_bedroom_from,
+    number_of_bedroom_to,
+    number_of_bathroom_from,
+    number_of_bathroom_to,
+    number_of_floor_from,
+    number_of_floor_to,
+
+    sort_field,
+    sort,
+    ...query
+  }: RoomSearchQuery) {
     const searchQuery: FilterQuery<IRoom> = { ...query };
     if (services) {
-      const splitted = services.split(",");
+      // const splitted = services.split(",");
 
       const serviceIds = (
         await RoomService_.find({
-          title: { $in: splitted },
+          title: { $in: services },
+          // title: { $in: splitted },
         })
       ).map((r) => r._id.toString());
       console.log(`🚀 ~ RoomService ~ getAll ~ serviceIds:`, serviceIds);
 
       // OR Condition (Have some the services user provided)
-      // searchQuery.services = {
-      //   $in: serviceIds,
-      // };
+      searchQuery.services = {
+        $in: serviceIds,
+      };
 
       // AND Condition (Must have all the services user provided)
-      searchQuery.services = serviceIds;
+      // searchQuery.services = serviceIds;
     }
+
     if (room_type) {
       const id = await RoomType.findOne({ title: room_type });
 
       searchQuery.room_type = id ?? undefined;
     }
+
     if (kw) {
       searchQuery.$text = { $search: kw };
     }
+
+    if (price_per_month_from) {
+      const [from, to] = [price_per_month_from, price_per_month_to];
+
+      searchQuery.price_per_month = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.price_per_month = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+    if (usable_area_from) {
+      const [from, to] = [usable_area_from, usable_area_to];
+
+      searchQuery.usable_area = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.usable_area = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+    if (number_of_living_room_from) {
+      const [from, to] = [number_of_living_room_from, number_of_living_room_to];
+
+      searchQuery.number_of_living_room = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.number_of_living_room = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+    if (number_of_bedroom_from) {
+      const [from, to] = [number_of_bedroom_from, number_of_bedroom_to];
+
+      searchQuery.number_of_bedroom = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.number_of_bedroom = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+    if (number_of_bathroom_from) {
+      const [from, to] = [number_of_bathroom_from, number_of_bathroom_to];
+
+      searchQuery.number_of_bathroom = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.number_of_bathroom = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+    if (number_of_floor_from) {
+      const [from, to] = [number_of_floor_from, number_of_floor_to];
+
+      searchQuery.number_of_floor = {
+        $gte: from,
+      };
+
+      if (to) {
+        searchQuery.number_of_floor = {
+          $gte: from,
+          $lte: to,
+        };
+      }
+    }
+
     if (province || district || ward) {
       const obj: FilterQuery<IRoomLocation> = {};
       if (province) obj.province = province;
@@ -101,27 +238,31 @@ class RoomService {
       };
     }
 
+    // searchQuery.disabled = false;
+
     console.log(`🚀 ~ RoomService ~ getAll ~ searchQuery:`, searchQuery);
-    console.log(`🚀 ~ RoomService ~ getAll ~ console:`, {
-      ...searchQuery,
-    });
 
     //   ...searchQuery,
     // });
     const docs = await Room.findPopulated({
       ...searchQuery,
     })
-      .sort({
-        createdAt: -1,
-      })
-      .skip(pageSize * (page - 1))
-      .limit(pageSize);
+      .sort([[sort_field ?? "createdAt", sort ?? -1]])
+      .skip(limit * (page - 1))
+      .limit(limit);
 
     // for await (const doc of docs) {
     //   await doc.populateAll();
     // }
 
     return docs;
+  }
+  async get(id: string | Types.ObjectId) {
+    const room = await Room.findPopulated({
+      _id: id,
+    });
+
+    return room[0] ?? null;
   }
   async create(userId: string | Types.ObjectId, { services, room_type, images, location, ...rest }: TRoomJSON) {
     const _id = new mongoose.mongo.ObjectId();

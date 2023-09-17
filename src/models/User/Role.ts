@@ -7,6 +7,9 @@ export interface IRole {
 
   title: TRole;
   display_name: string | null;
+
+  updatedAt: Date;
+  createdAt: Date;
 }
 interface IRoleMethods {
   //  methods
@@ -29,7 +32,9 @@ const schema = new Schema<IRole, RoleModel, IRoleMethods>(
       default: null,
     },
   },
-  {}
+  {
+    timestamps: true,
+  }
 );
 const Role = mongoose.model<IRole, RoleModel>("Role", schema);
 

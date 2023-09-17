@@ -59,7 +59,7 @@ class UserController {
         ],
       })
     )?.populateAll();
-    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Invalid username or password`));
+    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Không tồn tại`));
 
     const user = userDoc.toObject();
     const { username: _username } = user;

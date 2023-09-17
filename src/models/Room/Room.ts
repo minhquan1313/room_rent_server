@@ -36,6 +36,8 @@ export interface IRoom {
 
   available: boolean;
   disabled: boolean;
+  admin_checked: boolean;
+  verified: boolean;
 
   updatedAt: Date;
   createdAt: Date;
@@ -134,9 +136,17 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
 
     available: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     disabled: {
+      type: Boolean,
+      default: false,
+    },
+    admin_checked: {
+      type: Boolean,
+      default: false,
+    },
+    verified: {
       type: Boolean,
       default: false,
     },
@@ -176,17 +186,37 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
         ).map((r) => r._id.toString());
 
         const idsToDelete = currentServicesId.filter((id) => !servicesId.includes(id));
-        if (idsToDelete.length) {
-          await RoomWithRoomService.deleteMany({
+
+        idsToDelete.length &&
+          (await RoomWithRoomService.deleteMany({
             room: this._id,
             service: {
               $in: idsToDelete,
             },
-          });
-        }
+          }));
+
+        const idsToAdd = servicesId.filter((id) => !currentServicesId.includes(id));
+
+        idsToAdd.length &&
+          (await RoomWithRoomService.insertMany(
+            idsToAdd.map((service) => ({
+              room: this._id,
+              service,
+            }))
+          ));
 
         this.services = servicesId as any;
         await this.save();
+
+        // p          2 3 4
+        // data	    1 2
+        // dele	    1
+        // add          3 4
+
+        // let payload = [2, 3, 4];
+        // let data = [1, 2];
+        // let dele = data.filter((e) => !payload.includes(e));
+        // let add = payload.filter((e) => !data.includes(e));
       },
       async addOrUpdateImages(this: RoomDocument, _imagesId): Promise<void> {
         const currentImagesId = this.images.map((r) => r.toString());
@@ -274,20 +304,20 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
         return await this.populate([
           {
             path: "owner",
-            // populate: [
-            //   {
-            //     path: "gender",
-            //   },
-            //   {
-            //     path: "role",
-            //   },
-            //   {
-            //     path: "phone",
-            //   },
-            //   {
-            //     path: "email",
-            //   },
-            // ],
+            populate: [
+              {
+                path: "gender",
+              },
+              {
+                path: "role",
+              },
+              {
+                path: "phone",
+              },
+              {
+                path: "email",
+              },
+            ],
           },
           {
             path: "room_type",
@@ -311,20 +341,20 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           .populate([
             {
               path: "owner",
-              // populate: [
-              //   {
-              //     path: "gender",
-              //   },
-              //   {
-              //     path: "role",
-              //   },
-              //   {
-              //     path: "phone",
-              //   },
-              //   {
-              //     path: "email",
-              //   },
-              // ],
+              populate: [
+                {
+                  path: "gender",
+                },
+                {
+                  path: "role",
+                },
+                {
+                  path: "phone",
+                },
+                {
+                  path: "email",
+                },
+              ],
             },
             {
               path: "room_type",

@@ -13,7 +13,9 @@ class RoomServiceController {
   }
   // /api/v1/room-services/
   async getAll(req: Request, res: Response, next: NextFunction) {
-    const docs = await RoomService.find();
+    const docs = await RoomService.findPopulated().sort({
+      display_name: 1,
+    });
     res.json(docs);
   }
 }

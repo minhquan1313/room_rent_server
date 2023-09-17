@@ -10,7 +10,18 @@ import express from "express";
 // /api/v1/rooms
 const router = express.Router();
 
-router.get("/", CachedMiddleware(), RoomController.getOrSearch);
+router.get(
+  "/:id",
+  //
+  CachedMiddleware(),
+  RoomController.getSingle
+);
+router.get(
+  "/",
+  //
+  CachedMiddleware(),
+  RoomController.getOrSearch
+);
 
 // router.post(
 //   "/image/:roomId",

@@ -4,8 +4,10 @@ import mongoose, { Model, Schema, Types } from "mongoose";
 export type TRoomType = "cc" | "nr" | "nt" | "ktx" | "ccm" | "ttncc";
 export interface IRoomType {
   _id: Types.ObjectId;
+
   title: string;
   display_name: string | null;
+
   updatedAt: Date;
   createdAt: Date;
 }

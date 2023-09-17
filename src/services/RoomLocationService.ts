@@ -3,10 +3,10 @@ import Location3rdVNService from "@/services/Location3rdVNService";
 import { Location3rd } from "@/types/Location3rd";
 
 export type LocationSearchQuery = {
-  country?: string;
-  province?: string;
-  district?: string;
-  ward?: string;
+  country?: unknown;
+  province?: unknown;
+  district?: unknown;
+  ward?: unknown;
 
   all?: unknown;
 };
@@ -29,15 +29,14 @@ class RoomLocationService {
   async getProvinces(d: LocationSearchQuery = {}) {
     let { country, all } = d;
 
-    if (typeof country !== "string") country = undefined;
-
     let results: (string | Location3rd)[] = [];
     if (all === undefined) {
-      results = await RoomLocation.find({ country }, "province")
+      results = await RoomLocation.find(typeof country !== "string" ? {} : { country }, "province")
         .sort({
           province: 1,
         })
         .distinct("province");
+      console.log(`🚀 ~ RoomLocationService ~ getProvinces ~ results:`, results);
     } else {
       // if (typeof country === "string") {
       // const n = parseInt(country);
@@ -50,19 +49,17 @@ class RoomLocationService {
   }
   async getDistricts(d: LocationSearchQuery = {}) {
     let { province, all } = d;
-    if (typeof province !== "string") province = undefined;
 
     let results: (string | Location3rd)[] = [];
     if (all === undefined) {
-      results = await RoomLocation.find({ province }, "district")
+      results = await RoomLocation.find(typeof province !== "string" ? {} : { province }, "district")
         .sort({
           district: 1,
         })
         .distinct("district");
     } else {
       if (typeof province === "string") {
-        const n = parseInt(province);
-        if (n) results = await Location3rdVNService.getDistricts(n);
+        results = await Location3rdVNService.getDistricts(province);
       }
     }
 
@@ -70,55 +67,68 @@ class RoomLocationService {
   }
   async getWards(d: LocationSearchQuery = {}) {
     let { district, all } = d;
-    if (typeof district !== "string") district = undefined;
 
     let results: (string | Location3rd)[] = [];
     if (all === undefined) {
-      results = await RoomLocation.find({ district }, "ward")
+      results = await RoomLocation.find(typeof district !== "string" ? {} : { district }, "ward")
         .sort({
           ward: 1,
         })
         .distinct("ward");
     } else {
       if (typeof district === "string") {
-        const n = parseInt(district);
-        if (n) results = await Location3rdVNService.getWards(n);
+        results = await Location3rdVNService.getWards(district);
       }
     }
 
     return results;
   }
   async resolve(d: LocationSearchQuery = {}) {
-    let { province, district, ward } = d;
+    let { country, province, district, ward } = d;
+
+    if (!country || typeof country !== "string") return {};
 
     let result: {
       [k in keyof LocationSearchQuery]: Location3rd;
     } = {};
 
-    if (province) {
-      // find district
-      const province3rd = await Location3rdVNService.resolveProvince(province);
-      console.log(`🚀 ~ RoomLocationService ~ resolve ~ province3rd:`, province3rd);
+    switch (country.toLowerCase()) {
+      case "việt nam":
+        const c = (await Location3rdVNService.getCountries())[0];
 
-      if (province3rd) {
-        result["province"] = province3rd;
-      }
-    }
+        if (c) {
+          result["country"] = c;
+        }
 
-    if (district) {
-      // find ward
-      const district3rd = await Location3rdVNService.resolveDistrict(district);
-      if (district3rd) {
-        result["district"] = district3rd;
-      }
-    }
+        if (province && typeof province === "string") {
+          // find district
+          const province3rd = await Location3rdVNService.resolveProvince(province);
 
-    if (ward) {
-      // find ward
-      const ward3rd = await Location3rdVNService.resolveDistrict(ward);
-      if (ward3rd) {
-        result["ward"] = ward3rd;
-      }
+          if (province3rd) {
+            result["province"] = province3rd;
+          }
+        }
+
+        if (district && typeof district === "string") {
+          // find ward
+          const district3rd = await Location3rdVNService.resolveDistrict(district);
+          if (district3rd) {
+            result["district"] = district3rd;
+          }
+        }
+
+        if (ward && typeof ward === "string") {
+          // find ward
+          const ward3rd = await Location3rdVNService.resolveWard(ward);
+          if (ward3rd) {
+            result["ward"] = ward3rd;
+          }
+        }
+
+        break;
+
+      default:
+        return {};
     }
 
     return result;
