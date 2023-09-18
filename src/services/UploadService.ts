@@ -38,7 +38,7 @@ class UploadService {
   }
   unLinkFileSync(path: string) {
     try {
-      console.log(`🚀 ~ UploadService ~ unLinkFileSync ~ path:`, path);
+      // console.log(`🚀 ~ UploadService ~ unLinkFileSync ~ path:`, path);
 
       fs.unlinkSync(path);
 

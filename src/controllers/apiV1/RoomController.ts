@@ -9,7 +9,9 @@ import { StatusCodes } from "http-status-codes";
 class RoomController {
   async getSingle(req: Request, res: Response) {
     try {
-      res.json(await RoomService.get(req.params.id));
+      const room = await RoomService.get(req.params.id);
+
+      res.json(room);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
@@ -56,22 +58,42 @@ class RoomController {
     try {
       const { roomId } = req.params;
       const { files, user } = req;
-      console.log(`🚀 ~ RoomController ~ patchEditRoom ~ files:`, files);
+
+      /**
+       * imagesOrders sẽ là 1 mảng dạng số number[]
+       * gồm dãy số đầu là order của image có sẵn trên hệ thống
+       * và dãy số sau là cho các file mới upload lên
+       */
       const { images, owner, imagesOrders }: Partial<TRoomJSON> = req.body;
 
       let userId = owner ?? user!._id.toString();
 
-      if (images) await RoomImageService.reOrderImagesWithIdsOrdered(images);
+      /**
+       * Khi update ảnh có images[] gồm các id ảnh, thì dựa theo thứ tự id bên trong
+       * mà gắn order lại theo thứ tự đó
+       */
+      if (images && imagesOrders) {
+        await RoomImageService.reOrderImages(images, imagesOrders);
+        // await RoomImageService.reOrderImagesWithIdsOrdered(images);
+      }
 
       let newImagesIds: string[] = Array.isArray(images) ? images : [];
-      if (Array.isArray(files)) {
-        newImagesIds.push(...(await RoomImageService.roomImagesUpload(files, userId, roomId, imagesOrders)));
+      if (Array.isArray(files) && files.length) {
+        let orders: number[] | boolean = true;
+
+        if (Array.isArray(imagesOrders)) {
+          orders = imagesOrders.slice(newImagesIds.length);
+        }
+
+        newImagesIds.push(...(await RoomImageService.roomImagesUpload(files, userId, roomId, orders)));
       }
 
       const room = await RoomService.update(roomId, {
         ...req.body,
         images: newImagesIds,
       });
+      console.log(`🚀 ~ RoomController ~ patchEditRoom ~ room:`, room);
+
       res.json(room);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));

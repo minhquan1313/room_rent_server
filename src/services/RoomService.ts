@@ -5,8 +5,12 @@ import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
 import { RoomService as RoomService_, TRoomService } from "@/models/Room/RoomService";
 import { RoomType, TRoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
-import mongoose, { FilterQuery, Types } from "mongoose";
+import mongoose, { FilterQuery, PipelineStage, Types } from "mongoose";
 
+export interface TRoomLocationPayload extends Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt" | "lat_long"> {
+  lat: number;
+  long: number;
+}
 export type TRoomJSON = {
   owner?: string;
   room_type: TRoomType;
@@ -18,7 +22,7 @@ export type TRoomJSON = {
   images?: string[];
   imagesOrders?: number[];
 
-  location: Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt">;
+  location: TRoomLocationPayload;
 
   sub_name?: string;
   description?: string;
@@ -74,6 +78,8 @@ export interface RoomSearchQuery {
   search_close_to_lat?: string;
   search_close_to_long?: string;
 
+  projection?: string;
+
   // owner?: string;
   // ...
   // ?services=wifi,mt
@@ -114,9 +120,14 @@ class RoomService {
 
     sort_field,
     sort,
+
+    projection,
+
     ...query
   }: RoomSearchQuery) {
     const searchQuery: FilterQuery<IRoom> = { ...query };
+    let geoNearQuery: PipelineStage.GeoNear | undefined;
+
     if (services) {
       // const splitted = services.split(",");
 
@@ -232,34 +243,35 @@ class RoomService {
       }
     }
 
-    if (search_close_to === "true") {
-      const lat = Number(search_close_to_lat);
-      const long = Number(search_close_to_long);
-      if (lat && long) {
-        const z = await RoomLocation.aggregate([
-          {
-            $geoNear: {
-              near: {
-                type: "Point",
-                coordinates: [long, lat],
+    if (search_close_to === "true" || province || district || ward) {
+      let roomLocations: IRoomLocation[] = [];
+
+      if (search_close_to === "true") {
+        const lat = Number(search_close_to_lat);
+        const long = Number(search_close_to_long);
+        if (lat && long) {
+          roomLocations = await RoomLocation.aggregate([
+            {
+              $geoNear: {
+                near: {
+                  type: "Point",
+                  coordinates: [long, lat],
+                },
+                distanceField: "distance",
+                maxDistance: proximityThreshold,
+                spherical: true,
               },
-              distanceField: "distance",
-              maxDistance: proximityThreshold,
-              spherical: true,
             },
-          },
-        ]);
-        console.log(`🚀 ~ RoomService ~ z:`, z);
+          ]);
+        }
+      } else {
+        const obj: FilterQuery<IRoomLocation> = {};
+        if (province) obj.province = province;
+        if (district) obj.district = district;
+        if (ward) obj.ward = ward;
 
-        return [];
+        roomLocations = await RoomLocation.find(obj);
       }
-    } else if (province || district || ward) {
-      const obj: FilterQuery<IRoomLocation> = {};
-      if (province) obj.province = province;
-      if (district) obj.district = district;
-      if (ward) obj.ward = ward;
-
-      const roomLocations = await RoomLocation.find(obj);
 
       const lIds = roomLocations.map((r) => r._id.toString());
 
@@ -268,35 +280,60 @@ class RoomService {
       };
     }
 
-    // searchQuery.disabled = false;
-
     console.log(`🚀 ~ RoomService ~ getAll ~ searchQuery:`, searchQuery);
 
-    //   ...searchQuery,
-    // });
     const query_ = Room.findPopulated({
       ...searchQuery,
     });
 
-    if (sort_field) {
-      query_.sort([[sort_field, sort ?? -1]]);
-    }
+    // Room.find({},)
+    // const chain: PipelineStage[] = [];
+
+    // if (geoNearQuery) {
+    //   chain.push(geoNearQuery);
+    // }
+
+    // chain.push({
+    //   $match: searchQuery,
+    // });
+
+    // if (sort_field) {
+    //   // chain.push({
+    //   //   $sort: {
+    //   //     [sort_field]: sort ?? -1,
+    //   //   },
+    //   // });
+
+    //   query_.sort([[sort_field, sort || -1]]);
+    // }
+    query_.sort([[sort_field || "createdAt", sort || -1]]);
 
     if (limit) {
+      // chain.push({
+      //   $limit: 10,
+      // });
+
       query_.limit(limit);
       if (page) {
+        // chain.push({
+        //   $skip: limit * (page - 1),
+        // });
         query_.skip(limit * (page - 1));
       }
     }
 
-    query_.lean();
+    if (projection) {
+      query_.distinct(projection);
+    }
+    // query_.lean();
+    RoomLocation.modelName;
+    console.log(`🚀 ~ RoomService ~ RoomLocation.modelName:`, RoomLocation.modelName);
+
+    console.log(`🚀 ~ RoomService ~ RoomLocation.baseModelName:`, RoomLocation.baseModelName);
+
+    // const query_ = Room.aggregate(chain);
 
     const docs = await query_.exec();
-
-    // for await (const doc of docs) {
-    //   await doc.populateAll();
-    // }
-
     return docs;
   }
   async get(id: string | Types.ObjectId) {
@@ -330,12 +367,10 @@ class RoomService {
     if (location) await room.addOrUpdateLocation(location);
     if (images) await room.addOrUpdateImages(images);
 
-    await room.updateOne({
+    return await room.updateOne({
       ...rest,
       room_type: (room_type && (await RoomType.findOne({ title: room_type }))) || undefined,
     });
-
-    return await (await Room.findById(roomId))?.populateAll();
   }
 
   async delete(roomId: string | Types.ObjectId) {

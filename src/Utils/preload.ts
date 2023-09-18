@@ -29,4 +29,6 @@ export async function doPreload() {
 
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
+
+  console.log(`Preload DONE`);
 }

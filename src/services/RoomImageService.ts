@@ -2,7 +2,7 @@ import { RoomImage, RoomImageDocument } from "@/models/Room/RoomImage";
 import UploadService from "@/services/UploadService";
 
 class RoomImageService {
-  async reOrderImages(roomId: string): Promise<RoomImageDocument[]> {
+  async autoReOrderDuplicateImages(roomId: string): Promise<RoomImageDocument[]> {
     const imgs = await RoomImage.find({
       room: roomId,
     }).sort({
@@ -29,6 +29,20 @@ class RoomImageService {
     console.log(`🚀 ~ reOrderImages ~ imgs:`, imgs.map((r) => `"${r._id.toString()}"`).join(","));
 
     return imgs;
+  }
+
+  async reOrderImages(imageIds: string[], order: number[]) {
+    let i = 0;
+    for await (const _id of imageIds) {
+      await RoomImage.updateOne(
+        {
+          _id,
+        },
+        {
+          order: order[i++],
+        }
+      );
+    }
   }
 
   async reOrderImagesWithIdsOrdered(_ids: string[], start = 1): Promise<void> {

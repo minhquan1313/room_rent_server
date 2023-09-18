@@ -14,7 +14,7 @@ const DEFAULT_CACHE_TIME = 60000; //ms
 
 export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: CachedParams = {}) => {
   return (req: Request, res: ResponseCached, next: NextFunction) => {
-    const key = "__express__" + req.originalUrl || req.url + (key_ ?? "");
+    const key = key_ || "__express__" + req.originalUrl || req.url;
 
     const cachedBody = cache.get(key);
 

@@ -5,8 +5,14 @@ export interface IRoomLocation {
   _id: Types.ObjectId;
 
   room: Types.ObjectId;
-  lat: number;
-  long: number;
+
+  lat_long: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+
+  // lat: number;
+  // long: number;
   country: string;
   province: string;
   district?: string;
@@ -32,14 +38,25 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
       required: true,
       ref: "Room",
     },
-    lat: {
-      type: Number,
-      required: true,
+    lat_long: {
+      type: {
+        type: String,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number, Number],
+        required: true,
+      },
     },
-    long: {
-      type: Number,
-      required: true,
-    },
+
+    // lat: {
+    //   type: Number,
+    //   required: true,
+    // },
+    // long: {
+    //   type: Number,
+    //   required: true,
+    // },
     country: {
       type: String,
       required: true,
@@ -66,7 +83,7 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
   }
 );
 
-schema.index({ lat: "2dsphere", long: "2dsphere" });
+schema.index({ lat_long: "2dsphere" });
 
 const RoomLocation = mongoose.model<IRoomLocation, RoomTypeModel>("RoomLocation", schema);
 

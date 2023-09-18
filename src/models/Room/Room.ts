@@ -1,10 +1,10 @@
 import { RoomImage } from "@/models/Room/RoomImage";
-import { IRoomLocation, RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
+import { RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
 import { RoomService, RoomServiceDocument, TRoomService } from "@/models/Room/RoomService";
 import { RoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { User } from "@/models/User/User";
-import RoomImageService from "@/services/RoomImageService";
+import { TRoomLocationPayload } from "@/services/RoomService";
 import UploadService from "@/services/UploadService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
@@ -46,7 +46,7 @@ interface IRoomMethods {
   getServices(): Promise<RoomServiceDocument[]>;
   addOrUpdateServices(services: TRoomService[]): Promise<void>;
   addOrUpdateImages(imagesIds: string[]): Promise<void>;
-  addOrUpdateLocation(locationDetail: Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt">): Promise<void>;
+  addOrUpdateLocation(locationDetail: TRoomLocationPayload): Promise<void>;
   getLocation(): Promise<RoomLocationDocument | null>;
 
   populateAll(): Promise<RoomDocument>;
@@ -252,7 +252,15 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           });
         }
 
-        const roomImages = await RoomImageService.reOrderImages(this._id.toString());
+        // const roomImages = await RoomImageService.autoReOrderDuplicateImages(this._id.toString());
+        const roomImages = await RoomImage.find({
+          room: this._id,
+        })
+          .sort({
+            order: 1,
+            updatedAt: -1,
+          })
+          .lean();
 
         this.images = roomImages.map((r) => r._id);
         await this.save();
@@ -263,9 +271,14 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           // already has a location
           const locationDoc = await RoomLocation.findById(this.location);
           if (!locationDoc) {
+            console.log(`🚀 ~ Create with id`);
+
             // location not in collection
             await RoomLocation.create({
               ...locationDetail,
+              lat_long: {
+                coordinates: [locationDetail.long, locationDetail.lat],
+              },
               _id: this.location,
               room: this._id,
             });
@@ -273,19 +286,27 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
             return;
           }
 
+          console.log(`🚀 ~ Update`);
           await RoomLocation.findOneAndUpdate(
             {
               _id: this.location,
             },
             {
               ...locationDetail,
+              lat_long: {
+                coordinates: [locationDetail.long, locationDetail.lat],
+                type: "Point",
+              },
               room: this._id,
             }
           );
-          console.log(`🚀 ~ addOrUpdateLocation ~ locationDetail:`, locationDetail);
         } else {
+          console.log(`🚀 ~ Create new`);
           const locationDoc = await RoomLocation.create({
             ...locationDetail,
+            lat_long: {
+              coordinates: [locationDetail.long, locationDetail.lat],
+            },
             room: this._id,
           });
 

@@ -1,3 +1,4 @@
+import { removeAccents } from "@/Utils/removeAccents";
 import { RoomLocation } from "@/models/Room/RoomLocation";
 import Location3rdVNService from "@/services/Location3rdVNService";
 import { Location3rd } from "@/types/Location3rd";
@@ -91,8 +92,8 @@ class RoomLocationService {
       [k in keyof Omit<LocationSearchQuery, "all">]: Location3rd;
     } = {};
 
-    switch (country.toLowerCase()) {
-      case "việt nam":
+    switch (removeAccents(country.toLowerCase())) {
+      case "viet nam":
         const c = (await Location3rdVNService.getCountries())[0];
 
         if (c) {

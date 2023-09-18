@@ -10,12 +10,14 @@ import express from "express";
 // /api/v1/rooms
 const router = express.Router();
 
+// let key = "";
 router.get(
   "/:id",
   //
-  CachedMiddleware(),
+  // CachedMiddleware(),
   RoomController.getSingle
 );
+
 router.get(
   "/",
   //
