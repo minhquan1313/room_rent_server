@@ -8,16 +8,12 @@ const db = {
       if (DB_URL) {
         await mongoose.connect(DB_URL);
         console.log(`Connect to db SUCCESS`);
-
-        return true;
       } else {
-        throw new Error(`No DB_URL`);
+        throw new Error(`Missing DB_URL`);
       }
     } catch (error) {
-      console.log(`🚀 ~ connect ~ error:`, error);
+      console.log(`🚀 ~ Error connecting db:`, error);
     }
-
-    return false;
   },
 };
 

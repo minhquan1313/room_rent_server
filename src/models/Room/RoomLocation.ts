@@ -22,16 +22,16 @@ export interface IRoomLocation {
   updatedAt: Date;
   createdAt: Date;
 }
-interface IRoomTypeMethods {
+interface IRoomLocationMethods {
   //  methods
 }
 
-interface RoomTypeModel extends Model<IRoomLocation, {}, IRoomTypeMethods> {
+interface RoomLocationModel extends Model<IRoomLocation, {}, IRoomLocationMethods> {
   // static methods
 }
-export type RoomLocationDocument = MongooseDocConvert<IRoomLocation, IRoomTypeMethods>;
+export type RoomLocationDocument = MongooseDocConvert<IRoomLocation, IRoomLocationMethods>;
 
-const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
+const schema = new Schema<IRoomLocation, RoomLocationModel, IRoomLocationMethods>(
   {
     room: {
       type: Schema.Types.ObjectId,
@@ -85,6 +85,6 @@ const schema = new Schema<IRoomLocation, RoomTypeModel, IRoomTypeMethods>(
 
 schema.index({ lat_long: "2dsphere" });
 
-const RoomLocation = mongoose.model<IRoomLocation, RoomTypeModel>("RoomLocation", schema);
+const RoomLocation = mongoose.model<IRoomLocation, RoomLocationModel>("RoomLocation", schema);
 
 export { RoomLocation };

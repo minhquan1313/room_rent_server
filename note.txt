@@ -1,0 +1,17 @@
+chat socket
+lấy chat cũ từ db
+
+socket chỉ gửi và nhận data khi kết nối
+
+io.emit('event',data) => bắn data đến tất cả client
+
+socket.broadcast.emit => bắn data den tat ca 
+client tru nguoi gui
+
+socket.to(room).emit => bắn data đến các client 
+ở chung room
+
+const userIo = io.of('/user') => bây giờ userIo sẽ
+là một io mới, khi client connect tới .../user
+thì sẽ lọt vào userIo này
+
