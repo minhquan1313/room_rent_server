@@ -13,7 +13,7 @@ class ChatController {
       const { receivers } = req.query;
       console.log(`🚀 ~ ChatController ~ searchRoomByReceivers ~ receivers:`, receivers);
 
-      const doc = await ChatSocketService.searchRoomHasOnlyMembers([...(receivers as string[]), String(user?._id)]);
+      const doc = await ChatSocketService.searchRoomHasOnlyMembers([...(receivers as string[])]);
       console.log(`🚀 ~ ChatController ~ searchRoomByReceivers ~ doc:`, doc);
 
       res.json(doc);

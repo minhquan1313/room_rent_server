@@ -107,16 +107,24 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
     }
   });
   socket.on(chatSocketAction.C_SEEN_MSG, async function (msg: IChatMessage, receivers: string[]) {
+    console.log(`🚀 ~ receivers:`, receivers);
+
+    console.log(`🚀 ~ msg:`, msg);
+
     /**
      * Socket lúc này là SENDER
      */
+    // return;
     try {
       const seen = await ChatSocketService.createSeen(socket.data.user._id, msg);
+      console.log(`🚀 ~ seen:`, seen);
+
       receivers.forEach((userId) => {
-        if (userId === String(socket.data.user._id)) return;
+        console.log(`🚀 ~ receivers.forEach ~ userId:`, userId, receivers);
 
         socket.to(userId).emit(chatSocketAction.S_SEEN_MSG, seen);
       });
+      socket.emit(chatSocketAction.S_SEEN_MSG, seen);
     } catch (error) {
       console.error(error);
     }
@@ -137,7 +145,7 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         const m = await ChatSocketService.createMessage(msg.sender, msg.room, msg.message);
         const seen = await ChatSocketService.createSeen(socket.data.user._id, m);
         const m_: IChatMessageWithSeen = {
-          ...m,
+          ...m.toObject(),
           seen: [seen],
         };
 
@@ -163,7 +171,7 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         const m = await ChatSocketService.createMessage(msg.sender, room._id, msg.message);
         const seen = await ChatSocketService.createSeen(socket.data.user._id, m);
         const m_: IChatMessageWithSeen = {
-          ...m,
+          ...m.toObject(),
           seen: [seen],
         };
 

@@ -43,6 +43,7 @@ class ChatSocketService {
     const seen = await ChatSeen.create({
       room: msg.room,
       seen_by: by,
+      message_id: msg._id,
     });
 
     return seen;
@@ -159,12 +160,10 @@ class ChatSocketService {
         },
       },
       {
-        $group: {
-          _id: "$room",
-          members: { $first: "$members" },
-          messages: {
-            $push: "$messages",
-          },
+        $project: {
+          room: 1,
+          messages: ["$messages"],
+          members: 1,
         },
       },
     ]);
@@ -174,17 +173,9 @@ class ChatSocketService {
     return doc;
   }
 
-  // makeChatListObj({ room, messages, members }: { room: string; members: IChatMember[]; messages: IChatMessage[] }): TChatList {
-  //   const o: TChatList = {
-  //     room,
-  //     members,
-  //     messages,
-  //   };
-
-  //   return o;
-  // }
-
   async searchRoomHasOnlyMembers(members: string[]): Promise<TChatList[]> {
+    console.log(`🚀 ~ ChatSocketService ~ searchRoomHasOnlyMembers ~ members:`, members);
+
     const r: TChatList[] = await ChatRoom.aggregate([
       {
         $lookup: {
@@ -237,12 +228,10 @@ class ChatSocketService {
         },
       },
       {
-        $group: {
-          _id: "$room",
-          members: { $first: "$members" },
-          messages: {
-            $push: "$messages",
-          },
+        $project: {
+          room: 1,
+          messages: ["$messages"],
+          members: 1,
         },
       },
     ]);

@@ -92,6 +92,12 @@ class LoginTokenService {
 
     return user;
   }
+
+  verify() {
+    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
+
+    jwt.verify("asd", process.env.PRIVATE_JWT_KEY);
+  }
 }
 
 export default new LoginTokenService();
