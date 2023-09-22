@@ -4,6 +4,7 @@ import { createRoomTypeOnStart } from "@/models/Room/RoomType";
 import { createGenderOnStart } from "@/models/User/Gender";
 import { autoCreateRolesOnStart } from "@/models/User/Role";
 import { createAdminOnStart } from "@/models/User/User";
+import console from "console";
 import mongoose from "mongoose";
 
 export default function preload() {
@@ -29,6 +30,22 @@ export async function doPreload() {
 
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
+
+  // await ChatSeen.create({
+  //   room: "650d045985feedfc9f6e6cd2",
+  //   message_id: "650d065785feedfc9f6e6e99",
+  //   seen_by: "65072fe688f86cb92b8ee560",
+  // });
+
+  // const l = await ChatSocketService.searchMessageOfRoom({
+  //   room: "650d045985feedfc9f6e6cd2",
+  //   from_date_to_previous: new Date().toISOString(),
+  //   limit: "5",
+  // });
+  // const l = await ChatSocketService.searchRoomHasOnlyMembers(["65072fc9eda6171901329a2a", "65072fe688f86cb92b8ee560"]);
+  // const l = await ChatSocketService.searchChatRoomBubbleList({ user: "65072fc9eda6171901329a2a" });
+
+  // console.log(JSON.parse(JSON.stringify(l)));
 
   console.log(`Preload DONE`);
 }

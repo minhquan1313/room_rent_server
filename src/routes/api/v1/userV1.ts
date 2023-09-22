@@ -1,7 +1,7 @@
 import UserController from "@/controllers/apiV1/UserController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
 import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
-import { PermissionAdmin, PermissionAdminLvl2, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
+import { PermissionAdmin, UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
 import { UploaderMiddlewareWithJson } from "@/middlewares/UploaderMiddleware";
 import { ValidateHasUploadFilesMiddleware, ValidateMiddleware } from "@/middlewares/ValidateMiddleware";
 import { validateLoginUser, validateRegisterUser, validateUpdateUser } from "@/models/User/User";
@@ -10,8 +10,15 @@ import express from "express";
 // /api/v1/users
 const router = express.Router();
 
-router.get("/", CachedMiddleware(), AuthenticateMiddleware, PermissionAdminLvl2, UserController.get);
-router.get("/:userId", AuthenticateMiddleware, UserController.getSingle);
+router.get(
+  "/",
+  //
+  // AuthenticateMiddleware,
+  // PermissionAdminLvl2,
+  CachedMiddleware(),
+  UserController.get
+);
+router.get("/:userId", AuthenticateMiddleware, CachedMiddleware(), UserController.getSingle);
 
 // router.post("/transfer-admin");
 router.post("/login-token", AuthenticateMiddleware, UserController.postLoginToken);

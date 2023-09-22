@@ -326,10 +326,6 @@ class RoomService {
       query_.distinct(projection);
     }
     // query_.lean();
-    RoomLocation.modelName;
-    console.log(`🚀 ~ RoomService ~ RoomLocation.modelName:`, RoomLocation.modelName);
-
-    console.log(`🚀 ~ RoomService ~ RoomLocation.baseModelName:`, RoomLocation.baseModelName);
 
     // const query_ = Room.aggregate(chain);
 

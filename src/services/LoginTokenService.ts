@@ -1,4 +1,5 @@
 import { LoginToken } from "@/models/User/LoginToken";
+import { User } from "@/models/User/User";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
@@ -80,6 +81,16 @@ class LoginTokenService {
     date.setSeconds(date.getSeconds() + 3);
 
     return date;
+  }
+
+  async getUserByToken(token: string) {
+    const loginToken = await LoginToken.findOne({ token });
+
+    if (!loginToken || loginToken.user === null) return null;
+
+    const user = await User.findOne(loginToken.user);
+
+    return user;
   }
 }
 
