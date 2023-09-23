@@ -4,6 +4,7 @@ import initSocket from "@/chatSocket/initSocket";
 import db from "@/config/db";
 import { publicStaticServer, publicStaticUser } from "@/constants/constants";
 import router from "@/routes";
+import PushNotificationService from "@/services/PushNotificationService";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -14,6 +15,8 @@ console.clear();
 dotenv.config({ path: "./.env" });
 
 db.connect();
+
+PushNotificationService.initWebPush();
 
 preload();
 
@@ -31,7 +34,7 @@ app.use(cors());
 // app.use(cors(corsOptions));
 
 const server = initSocket(app);
-
+// fireBase.init();
 app.use(express.static(publicStaticServer));
 app.use(express.static(publicStaticUser));
 app.use(morgan("dev"));

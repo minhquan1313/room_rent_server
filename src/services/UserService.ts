@@ -32,9 +32,15 @@ export interface TUserJSON {
 
 class UserService {
   async get(query: Record<string, any>) {
-    const userDocs = await User.findPopulated({});
+    const userDocs = await User.findPopulated({}).lean();
 
     return userDocs;
+  }
+
+  async getSingle(id: string) {
+    const userDoc = await User.findById(id).lean();
+
+    return userDoc;
   }
 
   async deleteUser(userId: string) {

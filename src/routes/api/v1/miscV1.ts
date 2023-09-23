@@ -8,6 +8,7 @@ const router = express.Router();
 // router.get("/", RoomTypeController.getAll);
 
 router.post("/save-room", AuthenticateMiddleware, MiscController.saveRoom);
+router.post("/subscribe-push", AuthenticateMiddleware, MiscController.subscribePush);
 
 // router.patch("/:roleId", AuthenticateMiddleware, PermissionAdmin, RoomTypeController.patch);
 

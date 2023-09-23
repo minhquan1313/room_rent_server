@@ -21,5 +21,11 @@ export default function initSocket(app: Express) {
   io.on("connection", gateSocket);
   chatIo.on("connection", chatSocket);
 
+  // setInterval(() => {
+  //   chatIo.adapter.rooms;
+
+  //   console.log(`🚀 ~ setInterval ~ chatIo.adapter.rooms:`, chatIo.adapter.rooms, chatIo.adapter.rooms.has(`65072fc9eda6171901329a2a`));
+  // }, 3000);
+
   return server;
 }

@@ -6,6 +6,13 @@ export interface INotification {
 
   user: Types.ObjectId;
 
+  endpoint: string;
+
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+
   updatedAt: Date;
   createdAt: Date;
 }
@@ -25,10 +32,22 @@ const schema = new Schema<INotification, NotificationModel, INotificationMethods
       required: true,
       ref: "User",
     },
-    // display_name: {
-    //   type: String,
-    //   default: null,
-    // },
+
+    endpoint: {
+      type: String,
+      unique: true,
+    },
+
+    keys: {
+      p256dh: {
+        type: String,
+        required: true,
+      },
+      auth: {
+        type: String,
+        required: true,
+      },
+    },
   },
   {
     timestamps: true,

@@ -31,6 +31,22 @@ export async function doPreload() {
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
 
+  // PushNotificationService.triggerPushMsg(
+  //   {
+  //     endpoint:
+  //       "https://fcm.googleapis.com/fcm/send/dR33Ny_hDHg:APA91bEphSUr8z77Xf8OWKhFwckNPx-GPtA1G8Yx__58OMHWJ4f6U3tMEo4i92uDK-USHuXiGKtei_moFrQr4V6rcLEmik70IzlirpP74PbO4ucKuX7lNKe3WoBdt1hFCKD1JIvMqax7",
+  //     keys: {
+  //       p256dh: "BHRWYEJ1IWOqzFTMr0wi8brWUeRiQZdhiRETTK6wZdK5DRKTmYqGGIi1QT1V3KsT6_LooZ4PWRxisPR1CaCPY_w",
+  //       auth: "7FyM3VZBWNGuf3SBtym4tw",
+  //     },
+  //   },
+  //   {
+  //     title: "Title nè",
+  //     body: "Body nè hihi",
+  //     action: "openLink",
+  //   }
+  // );
+
   // await ChatSeen.create({
   //   room: "650d045985feedfc9f6e6cd2",
   //   message_id: "650d065785feedfc9f6e6e99",

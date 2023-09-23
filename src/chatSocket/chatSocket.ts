@@ -3,6 +3,7 @@ import { IChatMessage } from "@/models/ChatSocket/ChatMessage";
 import { IUser } from "@/models/User/User";
 import ChatSocketService from "@/services/ChatSocketService";
 import LoginTokenService from "@/services/LoginTokenService";
+import NotificationService from "@/services/NotificationService";
 import { IChatMessagePayload } from "@/types/IChatMessagePayload";
 import { IChatMessageWithSeen, TChatList } from "@/types/TChatList";
 import { Namespace, Socket } from "socket.io";
@@ -210,9 +211,34 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
        */
       socket.in(msg.receiver).in(uId).emit(chatSocketAction.S_SEND_MSG, message);
       socket.emit(chatSocketAction.S_SEND_MSG, message);
+      console.log(`🚀 ~ message:`, message);
 
-      const rooms = [uId, ...msg.receiver];
-      console.log(`🚀 ~ rooms:`, rooms);
+      /**
+       * Bắn thông báo đẩy cho các client đang offline
+       */
+
+      const offlineClients = msg.receiver.filter((id) => !io.adapter.rooms.has(id));
+      console.log(`🚀 ~ offlineClients:`, offlineClients);
+
+      offlineClients.forEach((id) => {
+        console.log(`🚀 ~ offlineClients.forEach ~ id:`, id);
+
+        if (!socket.data.user) return;
+        // const user = await UserService.getSingle(id);
+        // if (!user) return;
+
+        NotificationService.sendMessageNotification({
+          nameOfUser: socket.data.user.first_name,
+          toUserId: id,
+          message: msg.message,
+          chatRoomId: String(message.room),
+        });
+      });
+      // if (msg.receiver.every((id) => io.adapter.rooms.has(id))) {
+      //   msg.receiver.forEach((id) => {
+      //     NotificationService.sendMessageNotification();
+      //   });
+      // }
     } catch (error) {
       console.error(error);
     }

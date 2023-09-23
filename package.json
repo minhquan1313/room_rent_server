@@ -7,7 +7,6 @@
     "test": "npm run dev",
     "dev": "nodemon --inspect -e ts,js,.env --exec tsnd -r tsconfig-paths/register --transpile-only ./src/index.ts",
     "dev2": "tsnd --inspect -r tsconfig-paths/register --transpile-only ./src/index.ts ./.env",
-    "start": "node dist/index.js",
     "dev-old": "tsnd --respawn --inspect -r tsconfig-paths/register --pretty --transpile-only ./src/index.ts",
     "build": "copy .env .\\dist\\.env && tsc && tsc-alias"
   },
@@ -27,7 +26,8 @@
     "mongoose": "^7.4.4",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "web-push": "^3.6.6"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",
@@ -39,6 +39,7 @@
     "@types/morgan": "^1.9.5",
     "@types/multer": "^1.4.7",
     "@types/node": "^20.5.3",
+    "@types/web-push": "^3.6.0",
     "nodemon": "^3.0.1",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.7",
