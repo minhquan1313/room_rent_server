@@ -43,6 +43,8 @@ const schema = new Schema<IChatSeen, ChatSeenModel, IChatSeenMethods>(
   }
 );
 
+schema.index({ message_id: 1, seen_by: 1 }, { unique: true });
+
 const ChatSeen = mongoose.model<IChatSeen, ChatSeenModel>("ChatSeen", schema);
 
 export { ChatSeen };

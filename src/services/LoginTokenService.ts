@@ -1,5 +1,6 @@
 import { LoginToken } from "@/models/User/LoginToken";
-import { User } from "@/models/User/User";
+import { IUser, User } from "@/models/User/User";
+import { ModelToPayload } from "@/types/ModelToPayload";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
@@ -89,6 +90,16 @@ class LoginTokenService {
     if (!loginToken || loginToken.user === null) return null;
 
     const user = await User.findOne(loginToken.user);
+
+    return user;
+  }
+
+  async getUserByTokenAndLean(token: string) {
+    const loginToken = await LoginToken.findOne({ token });
+
+    if (!loginToken || loginToken.user === null) return null;
+
+    const user = await User.findOne(loginToken.user).lean();
 
     return user;
   }

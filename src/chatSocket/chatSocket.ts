@@ -9,7 +9,7 @@ import { Namespace, Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
 interface SocketData {
-  user: IUser;
+  user?: IUser;
 }
 
 export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
@@ -36,49 +36,35 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
       return next(error);
     }
 
-    s.data.user = user.toObject();
+    s.data.user = user;
     return next();
   });
 
   io.use((s, next) => {
-    s.join(s.data.user._id.toString());
-    // console.log(`🚀 ~ io.use ~ s.data.user:`, s.data.user);
+    // console.log(`🚀 ~ Joining ${s.data.user._id.toString()}`);
+    console.log(s.data.user);
+
+    if (s.data.user) {
+      s.join(s.data.user._id.toString());
+    } else {
+      const error = new Error(`Missing s.data.user`);
+      console.error(`🚀 ~ io.use ~ error:`, error);
+
+      return next(error);
+    }
 
     /**
      * Báo mọi người là người này đang online
      */
-    s.broadcast.to(s.data.user._id.toString()).emit(chatSocketAction.S_USER_ONLINE_STATUS, s.data.user._id.toString(), true);
+    // s.broadcast.to(s.data.user._id.toString()).emit(chatSocketAction.S_USER_ONLINE_STATUS, s.data.user._id.toString(), true);
 
     next();
   });
 
-  // const { userId } = socket.data;
-
-  // userId && socket.join(userId);
-
-  // socket.on(chatSocketAction.newMessage, async (messageData: IChat, room?: string) => {
-  //   try {
-  //     const { sender, receiver, message } = messageData;
-  //     const newMessage = new Chat({
-  //       sender,
-  //       receiver,
-  //       message,
-  //     });
-  //     //   await newMessage.save();
-
-  //     if (room) {
-  //       socket.to(room).emit(chatSocketAction.newMessage, newMessage);
-  //     } else {
-  //       io.emit(chatSocketAction.newMessage, newMessage);
-  //       // socket.broadcast.emit(chatSocketAction.newMessage, newMessage);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // });
-
   socket.on(chatSocketAction.C_JOIN_ROOM, function (room: string) {
     try {
+      if (!socket.data.user) return;
+
       console.log(`${socket.data.user.username} join room ${room}`);
 
       socket.join(room);
@@ -106,33 +92,66 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
       console.error(error);
     }
   });
-  socket.on(chatSocketAction.C_SEEN_MSG, async function (msg: IChatMessage, receivers: string[]) {
-    console.log(`🚀 ~ receivers:`, receivers);
 
-    console.log(`🚀 ~ msg:`, msg);
+  // const usersSettingSeen: {
+  //   [userId: string]: any;
+  // } = {};
+
+  socket.on(chatSocketAction.C_SEEN_MSG, async function (msg: IChatMessage, receivers: string[]) {
+    if (!socket.data.user) return;
+    console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG receivers:`, receivers);
+
+    console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG msg:`, msg);
 
     /**
      * Socket lúc này là SENDER
      */
     // return;
+    const uId = String(socket.data.user._id);
+    // console.log(usersSettingSeen, new Date().getTime());
+
     try {
-      const seen = await ChatSocketService.createSeen(socket.data.user._id, msg);
+      // if (Object.hasOwn(usersSettingSeen, uId)) {
+      //   /**
+      //    * Trường hợp 1 user đăng nhập trên nhiều thiết bị, khi nhận được 1 tin nhắn và nhiều thiết bị đều focus
+      //    * vào tin nhắn đó, thì sẽ có 1 loạt event seen từ 1 user sẽ được gửi vào đây, nên ta cần cấm trường hợp này
+      //    * để tránh tạo ra nhiều document không cần thiết
+      //    */
+      //   console.log(`Có user đang gửi seen`);
+
+      //   return;
+      // }
+
+      // usersSettingSeen[uId] = 1;
+      const seen = await ChatSocketService.createSeen(uId, msg);
       console.log(`🚀 ~ seen:`, seen);
 
-      receivers.forEach((userId) => {
-        console.log(`🚀 ~ receivers.forEach ~ userId:`, userId, receivers);
+      if (!seen) return;
 
-        socket.to(userId).emit(chatSocketAction.S_SEEN_MSG, seen);
-      });
+      // receivers.forEach((userId) => {
+      //   console.log(`🚀 ~ receivers.forEach ~ userId:`, userId, receivers);
+
+      //   socket.to(userId).emit(chatSocketAction.S_SEEN_MSG, seen);
+      // });
+
+      /**
+       * Receiver lúc này là gồm tất cả mọi người trong chat, và đương nhiên gồm thằng sender
+       */
+      socket.in(receivers).emit(chatSocketAction.S_SEEN_MSG, seen);
       socket.emit(chatSocketAction.S_SEEN_MSG, seen);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
     }
   });
+
   socket.on(chatSocketAction.C_SEND_MSG, async function (msg: IChatMessagePayload) {
+    if (!socket.data.user) return;
     /**
      * Socket lúc này là SENDER
      */
+    const uId = String(socket.data.user._id);
+    console.log(`🚀 ~ uId:`, uId);
+
     try {
       console.log(socket.data);
 
@@ -143,7 +162,7 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         console.log(`to room ${msg.room}`);
 
         const m = await ChatSocketService.createMessage(msg.sender, msg.room, msg.message);
-        const seen = await ChatSocketService.createSeen(socket.data.user._id, m);
+        const seen = await ChatSocketService.createSeen(uId, m);
         const m_: IChatMessageWithSeen = {
           ...m.toObject(),
           seen: [seen],
@@ -154,9 +173,6 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
           members: msg.members,
           messages: [m_],
         };
-
-        // socket.to(msg.room).emit(chatSocketAction.S_SEND_MSG, message);
-        // socket.emit(chatSocketAction.S_SEND_MSG, message);
       } else if (msg?.receiver) {
         /**
          * Tin nhắn gửi trực tiếp đến 1 nhóm người nào đó hoặc 1 người nào đó
@@ -165,11 +181,10 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
          */
         console.log(`new room`);
 
-        // make a new room
-        const { room, members } = await ChatSocketService.createRoom([socket.data.user._id, ...msg.receiver]);
+        const { room, members } = await ChatSocketService.createRoom([uId, ...msg.receiver]);
 
         const m = await ChatSocketService.createMessage(msg.sender, room._id, msg.message);
-        const seen = await ChatSocketService.createSeen(socket.data.user._id, m);
+        const seen = await ChatSocketService.createSeen(uId, m);
         const m_: IChatMessageWithSeen = {
           ...m.toObject(),
           seen: [seen],
@@ -180,15 +195,24 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
           members: members,
           messages: [m_],
         };
-
-        // message = ChatSocketService.makeChatListObj(msg.room, msg.receiver, m.message);
-
-        // socket.to(msg.receiver).emit(chatSocketAction.S_SEND_MSG, message);
-        // socket.emit(chatSocketAction.S_SEND_MSG, message);
       }
+
+      io.adapter.rooms;
+      console.log(`🚀 ~ io.adapter.rooms:`, io.adapter.rooms);
+
       console.log(`🚀 ~ msg.receiver:`, msg.receiver);
-      msg.receiver.forEach((receiver) => socket.to(receiver).emit(chatSocketAction.S_SEND_MSG, message));
+      /**
+       * Mặc dù đã gắn uId vào rồi, nhưng socket chỉ bắn tới thằng client của máy thứ 2
+       * nghĩa là cùng 1 account, đăng nhập 2 máy, nghĩa là vào cùng 1 room
+       * với id của account, nhưng chỉ bắn vào thằng account mà không gửi tin nhắn
+       *
+       * msg.receiver ở đây bao gồm các thành viên trong đoạn chat trừ thằng gửi
+       */
+      socket.in(msg.receiver).in(uId).emit(chatSocketAction.S_SEND_MSG, message);
       socket.emit(chatSocketAction.S_SEND_MSG, message);
+
+      const rooms = [uId, ...msg.receiver];
+      console.log(`🚀 ~ rooms:`, rooms);
     } catch (error) {
       console.error(error);
     }
