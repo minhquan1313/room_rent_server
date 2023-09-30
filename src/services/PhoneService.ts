@@ -69,6 +69,15 @@ class PhoneService {
 
     return old;
   }
+
+  async updateValid(e164: string, valid: boolean) {
+    const p = await PhoneNumber.findOne({ e164_format: e164 });
+
+    if (p) {
+      //
+      await p.updateOne({ verified: valid });
+    }
+  }
   async delete(phone: string | number) {
     await PhoneNumber.deleteOne({
       $or: [

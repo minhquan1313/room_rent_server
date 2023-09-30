@@ -9,7 +9,7 @@ import { StatusCodes } from "http-status-codes";
 class RoomController {
   async getSingle(req: Request, res: Response) {
     try {
-      const room = await RoomService.get(req.params.id);
+      const room = await RoomService.get(req.params.id, req.query);
 
       res.json(room);
     } catch (error: any) {
@@ -20,7 +20,6 @@ class RoomController {
   async getOrSearch(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query;
-      console.log(`🚀 ~ RoomController ~ getAll ~ query:`, query);
 
       res.json(await RoomService.getAll(query as any));
     } catch (error: any) {
@@ -95,6 +94,8 @@ class RoomController {
       console.log(`🚀 ~ RoomController ~ patchEditRoom ~ room:`, room);
 
       res.json(room);
+
+      next();
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

@@ -1,7 +1,6 @@
 import { LoginToken } from "@/models/User/LoginToken";
-import { IUser, User } from "@/models/User/User";
-import { ModelToPayload } from "@/types/ModelToPayload";
-import jwt from "jsonwebtoken";
+import { User } from "@/models/User/User";
+import JWTService from "@/services/JWTService";
 import { Types } from "mongoose";
 
 export interface ITokenParam {
@@ -17,18 +16,14 @@ export interface ITokenRawParam {
 class LoginTokenService {
   /**
    *
-   * @param param0 provide userId to auto create in database
+   * @param username provide userId to auto create in database
    * @returns
    */
   async makeToken({ username, userId }: ITokenParam) {
-    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
-    const token = jwt.sign(
-      {
-        username,
-        createdAt: new Date().getTime(),
-      },
-      process.env.PRIVATE_JWT_KEY
-    );
+    const token = JWTService.sign({
+      username,
+      createdAt: new Date().getTime(),
+    });
 
     if (userId) {
       const date = this.getTokenDefaultExpire();
@@ -57,11 +52,16 @@ class LoginTokenService {
   //   }
   // }
   encodePassword(password: string) {
-    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
-
-    const token = jwt.sign(password, process.env.PRIVATE_JWT_KEY);
+    const token = JWTService.sign(password);
 
     return token;
+  }
+  comparePassword(rawTypePassword?: string, encryptedPassword?: string) {
+    if (!rawTypePassword || !encryptedPassword) return false;
+
+    const p = this.encodePassword(rawTypePassword);
+
+    return p === encryptedPassword;
   }
 
   async extendsTime(token: string) {
@@ -76,10 +76,10 @@ class LoginTokenService {
   }
 
   getTokenDefaultExpire() {
-    // default will be 30
+    // default will be 30 days
     const date = new Date();
     date.setDate(date.getDate() + 30);
-    date.setSeconds(date.getSeconds() + 3);
+    // date.setSeconds(date.getSeconds() + 3);
 
     return date;
   }
@@ -102,12 +102,6 @@ class LoginTokenService {
     const user = await User.findOne(loginToken.user).lean();
 
     return user;
-  }
-
-  verify() {
-    if (!process.env.PRIVATE_JWT_KEY) throw new Error("PRIVATE_JWT_KEY missing");
-
-    jwt.verify("asd", process.env.PRIVATE_JWT_KEY);
   }
 }
 

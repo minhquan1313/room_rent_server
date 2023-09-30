@@ -26,7 +26,7 @@ export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: Cached
       res.sendResponse = res.send;
       (res as any).send = (body: any) => {
         cache.put(key, body, duration); // duration tính bằng giây
-        // console.log(`🚀 ~ CachedMiddleware ~ key:`, key);
+        console.log(`🚀 ~ CachedMiddleware ~ key:`, key);
 
         res.sendResponse!(body);
       };
@@ -34,3 +34,19 @@ export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: Cached
     }
   };
 };
+
+export type RequestCacheClear = Request & {
+  keyToClear?: string;
+};
+// export const CachedMiddlewareClearKey = (req: RequestCacheClear, res: Response, next: NextFunction) => {
+//   const { keyToClear } = req;
+
+//   req.params
+//   if (!keyToClear) return;
+
+//   cache.keys().forEach((key: string) => {
+//     if (!key.toLocaleLowerCase().includes(keyToClear)) return;
+
+//     cache.del(key);
+//   });
+// };

@@ -1,5 +1,4 @@
 import { errorResponse } from "@/Utils/errorRes";
-import { sleep } from "@/Utils/sleep";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Role, TRole } from "@/models/User/Role";
 import RoleService from "@/services/RoleService";
@@ -20,7 +19,6 @@ class RoleController {
   async getAll(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { roleTitle } = req;
-      await sleep(1000);
 
       if (roleTitle) {
         const r: TRole[] = ["admin", "admin_lvl_2"];

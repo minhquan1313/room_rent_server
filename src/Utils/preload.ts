@@ -63,5 +63,32 @@ export async function doPreload() {
 
   // console.log(JSON.parse(JSON.stringify(l)));
 
+  // SmsService.send("+84559232356", "Test ne");
+  // MailService.sendEmailVerifyCode({
+  //   email: "minhquan1313@gmail.com",
+  //   code: "123",
+  // });
+
+  // let t = JWTService.sign(
+  //   { ten: "Binh" },
+  //   {
+  //     expiresIn: "1s",
+  //   }
+  // );
+  // console.log(`🚀 ~ doPreload ~ t:`, t);
+
+  // const { ten } = JWTService.verify(t);
+  // console.log(`🚀 ~ doPreload ~ ten:`, ten);
+
+  // setTimeout(() => {
+  //   try {
+  //     console.log(`🚀 ~ doPreload ~ ten:`, JWTService.verify(t + "1"));
+  //   } catch (error) {
+  //     console.log(`🚀 ~ setTimeout ~ error:`, error);
+
+  //     // console.log(`🚀 ~ setTimeout ~ error:`, String(error).includes("jwt expired"));
+  //   }
+  // }, 2000);
+
   console.log(`Preload DONE`);
 }

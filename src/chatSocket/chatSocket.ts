@@ -15,7 +15,7 @@ interface SocketData {
 
 export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
   const io = this;
-  console.log(`User connected chat ${socket.data?.user?._id}`);
+  console.log(`Chat socket connected - ${socket.data.user?.username ?? "Guest"}[${socket.data.user?._id || ""}]`);
 
   // Middleware check id
   io.use(async (s, next) => {
@@ -43,7 +43,7 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
 
   io.use((s, next) => {
     // console.log(`🚀 ~ Joining ${s.data.user._id.toString()}`);
-    console.log(s.data.user);
+    // console.log(s.data.user);
 
     if (s.data.user) {
       s.join(s.data.user._id.toString());

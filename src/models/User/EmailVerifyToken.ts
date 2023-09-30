@@ -1,15 +1,35 @@
-import mongoose, { Schema, Types } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export interface IEmailVerifyToken {
+  _id: Types.ObjectId;
+
+  email: Types.ObjectId;
+  token: string;
+  expire: Date;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IEmailVerifyTokenMethods {}
+
+interface UserModel extends Model<IEmailVerifyToken, {}, IEmailVerifyTokenMethods> {
+  // static methods
+}
+
+export type EmailVerifyTokenDocument = MongooseDocConvert<IEmailVerifyToken, IEmailVerifyTokenMethods>;
+
+const schema = new Schema<IEmailVerifyToken, UserModel, IEmailVerifyTokenMethods>(
   {
     email: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Email",
     },
     token: {
       type: String,
       required: true,
+      unique: true,
     },
     expire: {
       type: Date,
@@ -21,6 +41,6 @@ const schema = new Schema(
   }
 );
 
-const EmailVerifyToken = mongoose.model("EmailVerifyToken", schema);
+const EmailVerifyToken = mongoose.model<IEmailVerifyToken, UserModel>("EmailVerifyToken", schema);
 
 export { EmailVerifyToken };

@@ -111,6 +111,16 @@ class UserService {
       }
     }
 
+    // if (!force) {
+    //   if (password && old_password) {
+    //     if (LoginTokenService.encodePassword(old_password) !== user.password) {
+    //       throw new Error(`Password not match`);
+    //     }
+    //   } else {
+    //     password = undefined;
+    //   }
+    // }
+
     await user.updateOne({
       ...rest,
       password: password ? LoginTokenService.encodePassword(password) : undefined,

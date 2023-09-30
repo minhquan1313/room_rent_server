@@ -10,6 +10,37 @@ import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { check } from "express-validator";
 import { FilterQuery, Model, Query, Schema, Types, isValidObjectId, model } from "mongoose";
 
+export const populatePaths = [
+  // {
+  //   path: "owner",
+  //   populate: [
+  //     {
+  //       path: "gender",
+  //     },
+  //     {
+  //       path: "role",
+  //     },
+  //     {
+  //       path: "phone",
+  //     },
+  //     {
+  //       path: "email",
+  //     },
+  //   ],
+  // },
+  {
+    path: "room_type",
+  },
+  {
+    path: "location",
+  },
+  {
+    path: "images",
+  },
+  {
+    path: "services",
+  },
+];
 export interface IRoom {
   _id: Types.ObjectId;
 
@@ -34,9 +65,21 @@ export interface IRoom {
   number_of_bathroom: number | null;
   number_of_floor: number;
 
-  available: boolean;
+  /**
+   * Owner ẩn hiện tin
+   */
+  is_visible: boolean;
+  /**
+   * Admin disable tin này và chờ gì đó từ user
+   */
   disabled: boolean;
-  admin_checked: boolean;
+  /**
+   * Admin đến tận nơi xác nhận
+   */
+  verified_real: boolean;
+  /**
+   * 1 bài đăng phải chờ được admin duyệt
+   */
   verified: boolean;
 
   updatedAt: Date;
@@ -134,7 +177,7 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       default: 1,
     },
 
-    available: {
+    is_visible: {
       type: Boolean,
       default: true,
     },
@@ -142,7 +185,7 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       type: Boolean,
       default: false,
     },
-    admin_checked: {
+    verified_real: {
       type: Boolean,
       default: false,
     },
@@ -322,74 +365,12 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
       },
 
       async populateAll(this: RoomDocument) {
-        return await this.populate([
-          {
-            path: "owner",
-            populate: [
-              {
-                path: "gender",
-              },
-              {
-                path: "role",
-              },
-              {
-                path: "phone",
-              },
-              {
-                path: "email",
-              },
-            ],
-          },
-          {
-            path: "room_type",
-          },
-          {
-            path: "location",
-          },
-          {
-            path: "images",
-          },
-          {
-            path: "services",
-          },
-        ]);
+        return await this.populate(populatePaths);
       },
     },
     statics: {
       findPopulated(query) {
-        return model("Room")
-          .find(query)
-          .populate([
-            {
-              path: "owner",
-              populate: [
-                {
-                  path: "gender",
-                },
-                {
-                  path: "role",
-                },
-                {
-                  path: "phone",
-                },
-                {
-                  path: "email",
-                },
-              ],
-            },
-            {
-              path: "room_type",
-            },
-            {
-              path: "location",
-            },
-            {
-              path: "images",
-            },
-            {
-              path: "services",
-            },
-          ]);
+        return model("Room").find(query).populate(populatePaths);
       },
     },
   }

@@ -3,6 +3,7 @@ import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import UserService from "@/services/UserService";
+import { HttpStatusCode } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -20,6 +21,8 @@ class UserController {
     const userDoc = await User.findById(userId);
 
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("User not found"));
+
+    await userDoc.populateAll();
 
     const user = userDoc.toObject();
 
@@ -48,6 +51,9 @@ class UserController {
 
     const encodedPass = LoginTokenService.encodePassword(password);
 
+    // const userDoc = await User.findOne({
+    //   username,
+    // });
     const userDoc = await (
       await User.findOne({
         username,
@@ -59,7 +65,12 @@ class UserController {
         ],
       })
     )?.populateAll();
-    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Không tồn tại`));
+    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Tên đăng nhập hoặc mật khẩu sai`));
+
+    // if (userDoc.password === encodedPass || userDoc.password === password) {
+    // } else {
+    //   return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Mật khẩu không khớp`));
+    // }
 
     const user = userDoc.toObject();
     const { username: _username } = user;
@@ -167,11 +178,13 @@ class UserController {
   async patch(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { userId } = req.params;
+      console.log(`🚀 ~ UserController ~ patch ~ userId:`, userId);
+
       req.body.file = req.file;
 
-      const user = await UserService.updateUser(userId, req.body);
+      await UserService.updateUser(userId, req.body);
 
-      res.json(user);
+      res.status(HttpStatusCode.Ok).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

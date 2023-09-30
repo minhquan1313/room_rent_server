@@ -31,9 +31,6 @@ class NotificationService {
   }
 
   async sendMessageNotification({ nameOfUser, toUserId, message, chatRoomId }: { nameOfUser: string; toUserId: string; message: string; chatRoomId: string }) {
-    const frontEnd = process.env.FRONT_END_HTTP;
-    if (!frontEnd) throw new Error(`Missing FRONT_END_HTTP`);
-
     console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ message:`, message);
 
     console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ toUserId:`, toUserId);

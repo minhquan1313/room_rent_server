@@ -7,8 +7,8 @@ export type NotificationPayload = {
   body: string;
   link: string;
 };
-const PushNotificationService = {
-  initWebPush() {
+class PushNotificationService {
+  init() {
     const vapidKeys = {
       publicKey: process.env.PUBLIC_PUSH_NOTI_KEY,
       privateKey: process.env.PRIVATE_PUSH_NOTI_KEY,
@@ -18,11 +18,8 @@ const PushNotificationService = {
     if (!vapidKeys.privateKey) throw new Error(`Missing vapidKeys.privateKey`);
 
     webpush.setVapidDetails("mailto:2051012011binh@ou.edu.vn", vapidKeys.publicKey, vapidKeys.privateKey);
-  },
+  }
 
-  // triggerPushMsgAndForget(subscription: webpush.PushSubscription, dataToSend: string | Buffer | null | undefined) {
-  //   webpush.sendNotification(subscription, dataToSend);
-  // },
   async triggerPushMsg(subscription: webpush.PushSubscription, dataToSend: NotificationPayload) {
     try {
       return await webpush.sendNotification(subscription, JSON.stringify(dataToSend));
@@ -36,7 +33,7 @@ const PushNotificationService = {
         // throw err;
       }
     }
-  },
-};
+  }
+}
 
-export default PushNotificationService;
+export default new PushNotificationService();

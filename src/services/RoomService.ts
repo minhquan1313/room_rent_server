@@ -1,11 +1,12 @@
 import { proximityThreshold } from "@/constants/constants";
-import { IRoom, Room } from "@/models/Room/Room";
+import { IRoom, Room, populatePaths } from "@/models/Room/Room";
 import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
 import { RoomService as RoomService_, TRoomService } from "@/models/Room/RoomService";
 import { RoomType, TRoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
-import mongoose, { FilterQuery, PipelineStage, Types } from "mongoose";
+import { TCommonQuery } from "@/types/TCommonQuery";
+import mongoose, { FilterQuery, Types } from "mongoose";
 
 export interface TRoomLocationPayload extends Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt" | "lat_long"> {
   lat: number;
@@ -37,10 +38,8 @@ export type TRoomJSON = {
   number_of_bedroom?: number;
   number_of_bathroom?: number;
   number_of_floor?: number;
-
-  available?: boolean;
 };
-export interface RoomSearchQuery {
+export interface RoomSearchQuery extends TCommonQuery {
   kw?: string;
 
   services?: string[];
@@ -48,9 +47,6 @@ export interface RoomSearchQuery {
   province?: string;
   district?: string;
   ward?: string;
-
-  limit?: number;
-  page?: number;
 
   usable_area: number;
   usable_area_from?: number;
@@ -73,7 +69,7 @@ export interface RoomSearchQuery {
 
   sort_field?: string;
   sort?: 1 | -1;
-
+  disabled?: boolean;
   search_close_to?: string | boolean;
   search_close_to_lat?: string;
   search_close_to_long?: string;
@@ -90,43 +86,49 @@ export interface RoomSearchQuery {
   // ?ward=adwwd
 }
 class RoomService {
-  async getAll({
-    limit,
-    page,
+  async getAll(query2: RoomSearchQuery) {
+    const {
+      count,
+      saved,
+      disabled,
 
-    services,
-    kw,
-    room_type,
-    province,
-    district,
-    ward,
+      limit = "99",
+      page = "1",
 
-    usable_area_from,
-    usable_area_to,
-    price_per_month_from,
-    price_per_month_to,
-    number_of_living_room_from,
-    number_of_living_room_to,
-    number_of_bedroom_from,
-    number_of_bedroom_to,
-    number_of_bathroom_from,
-    number_of_bathroom_to,
-    number_of_floor_from,
-    number_of_floor_to,
+      services,
+      kw,
+      room_type,
+      province,
+      district,
+      ward,
 
-    search_close_to,
-    search_close_to_lat,
-    search_close_to_long,
+      usable_area_from,
+      usable_area_to,
+      price_per_month_from,
+      price_per_month_to,
+      number_of_living_room_from,
+      number_of_living_room_to,
+      number_of_bedroom_from,
+      number_of_bedroom_to,
+      number_of_bathroom_from,
+      number_of_bathroom_to,
+      number_of_floor_from,
+      number_of_floor_to,
 
-    sort_field,
-    sort,
+      search_close_to,
+      search_close_to_lat,
+      search_close_to_long,
 
-    projection,
+      sort_field,
+      sort,
 
-    ...query
-  }: RoomSearchQuery) {
-    const searchQuery: FilterQuery<IRoom> = { ...query };
-    let geoNearQuery: PipelineStage.GeoNear | undefined;
+      projection,
+
+      ...query
+    } = query2;
+
+    const searchQuery: FilterQuery<IRoom> = query;
+    if ("owner" in searchQuery) searchQuery.owner = new Types.ObjectId(searchQuery.owner);
 
     if (services) {
       // const splitted = services.split(",");
@@ -273,66 +275,66 @@ class RoomService {
         roomLocations = await RoomLocation.find(obj);
       }
 
-      const lIds = roomLocations.map((r) => r._id.toString());
+      const lIds = roomLocations.map((r) => r._id);
 
       searchQuery.location = {
         $in: lIds,
       };
     }
 
-    console.log(`🚀 ~ RoomService ~ getAll ~ searchQuery:`, searchQuery);
-
-    const query_ = Room.findPopulated({
+    const qCount = Room.countDocuments({
       ...searchQuery,
     });
+    const q = Room.aggregate([{ $match: searchQuery }]);
+    console.log(`🚀 ~ RoomService ~ getAll ~ searchQuery:`, searchQuery);
 
-    // Room.find({},)
-    // const chain: PipelineStage[] = [];
-
-    // if (geoNearQuery) {
-    //   chain.push(geoNearQuery);
-    // }
-
-    // chain.push({
-    //   $match: searchQuery,
+    // const q = Room.findPopulated({
+    //   ...searchQuery,
     // });
 
-    // if (sort_field) {
-    //   // chain.push({
-    //   //   $sort: {
-    //   //     [sort_field]: sort ?? -1,
-    //   //   },
-    //   // });
+    // await Room.populate(q, populatePaths);
 
-    //   query_.sort([[sort_field, sort || -1]]);
+    console.log(`🚀 ~ RoomService ~ getAll ~ saved:`, saved);
+    if (saved !== undefined) {
+      q.append({
+        $lookup: {
+          from: "saveds",
+          localField: "_id",
+          foreignField: "room",
+          as: "saved",
+        },
+      });
+    }
+
+    q.sort({
+      [sort_field || "createdAt"]: sort || -1,
+    });
+    // q.sort([[sort_field || "createdAt", sort || -1]]);
+
+    if (limit !== 0) {
+      q.skip(Number(limit) * (Number(page) - 1));
+      q.limit(Number(limit));
+    }
+
+    // if (projection) {
+    // q.distinct(projection);
     // }
-    query_.sort([[sort_field || "createdAt", sort || -1]]);
 
-    if (limit) {
-      // chain.push({
-      //   $limit: 10,
-      // });
+    if (count !== undefined) {
+      const [count, data] = await Promise.all([qCount.exec(), q.exec()]);
+      await Room.populate(data, populatePaths);
 
-      query_.limit(limit);
-      if (page) {
-        // chain.push({
-        //   $skip: limit * (page - 1),
-        // });
-        query_.skip(limit * (page - 1));
-      }
+      return { data, count };
+
+      // const countDoc = await queryCount.exec();
+    } else {
+      const data = await q.exec();
+
+      await Room.populate(data, populatePaths);
+      return data;
     }
-
-    if (projection) {
-      query_.distinct(projection);
-    }
-    // query_.lean();
-
-    // const query_ = Room.aggregate(chain);
-
-    const docs = await query_.exec();
-    return docs;
   }
-  async get(id: string | Types.ObjectId) {
+  async get(id: string | Types.ObjectId, { ...query }: TCommonQuery) {
     const room = await Room.findPopulated({
       _id: id,
     });

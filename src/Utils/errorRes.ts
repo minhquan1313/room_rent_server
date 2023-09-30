@@ -4,6 +4,5 @@ export function errorResponse(msg: string | { msg: string }[] = [{ msg: "Not def
   return {
     code,
     error: Array.isArray(msg) ? msg : [{ msg }],
-    success: false,
   };
 }

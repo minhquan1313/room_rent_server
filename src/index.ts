@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config({ path: "./.env" });
+
 import { createFolderFsSync } from "@/Utils/createFolderFsSync";
 import preload from "@/Utils/preload";
 import initSocket from "@/chatSocket/initSocket";
@@ -5,21 +8,20 @@ import db from "@/config/db";
 import { publicStaticServer, publicStaticUser } from "@/constants/constants";
 import router from "@/routes";
 import PushNotificationService from "@/services/PushNotificationService";
+import SmsService from "@/services/SmsService";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
+import { queryParser } from "express-query-parser";
 import morgan from "morgan";
 
-console.clear();
-
-dotenv.config({ path: "./.env" });
+// console.clear();
 
 db.connect();
 
-PushNotificationService.initWebPush();
+PushNotificationService.init();
+SmsService.init();
 
 preload();
-
 createFolderFsSync(publicStaticUser);
 
 // const corsOptions = {
@@ -44,6 +46,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // fetch with json and "Content-Type": "application/json"
 app.use(express.json());
+app.use(
+  queryParser({
+    parseBoolean: true,
+    parseNumber: true,
+  })
+);
 
 app.use(router);
 

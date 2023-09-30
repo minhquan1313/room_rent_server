@@ -1,6 +1,5 @@
 import RoomController from "@/controllers/apiV1/RoomController";
 import { AuthenticateMiddleware } from "@/middlewares/AuthenticateMiddleware";
-import { CachedMiddleware } from "@/middlewares/CachedMiddleware";
 import { UserSelfChangeOrAdminMiddleware } from "@/middlewares/PermissionMiddleware";
 import { UploaderMiddlewareWithJson } from "@/middlewares/UploaderMiddleware";
 import { ValidateHasUploadFilesMiddleware } from "@/middlewares/ValidateMiddleware";
@@ -21,7 +20,7 @@ router.get(
 router.get(
   "/",
   //
-  CachedMiddleware(),
+  // CachedMiddleware(),
   RoomController.getOrSearch
 );
 

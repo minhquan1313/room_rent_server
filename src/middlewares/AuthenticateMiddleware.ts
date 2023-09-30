@@ -11,12 +11,20 @@ export type RequestAuthenticate = Request & {
   roleTitle?: TRole;
   token?: string;
 };
+
+/**
+ * Must auth
+ */
 export async function AuthenticateMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
   if (await Auth(req, res, next)) return next();
 
   res.status(StatusCodes.UNAUTHORIZED).json(errorResponse(`Unauthorized`));
 }
 
+/**
+ * If user auth then req will have user
+ * and roleTitle for the next method
+ */
 export async function IsAuthenticatedMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
   await Auth(req, res, next);
 
