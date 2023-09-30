@@ -1,5 +1,7 @@
-import { Email } from "@/models/User/Email";
+import { Email, IEmail } from "@/models/User/Email";
 import JWTService from "@/services/JWTService";
+import { TCreateBody } from "@/types/TCommonQuery";
+import { Types } from "mongoose";
 import { createTransport } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 
@@ -116,6 +118,27 @@ class MailService {
     doc.verified = true;
     await doc.save();
 
+    return true;
+  }
+
+  async deleteEmail(mailId: string) {
+    await Email.deleteOne({ _id: mailId });
+  }
+  async createEmail(newData: TCreateBody<IEmail>) {
+    const doc = await Email.create(newData);
+
+    return doc;
+  }
+  async updateEmail(mailId: string | Types.ObjectId, newData: Partial<IEmail>) {
+    const doc = await Email.findOne({ _id: mailId });
+    if (!doc) return false;
+
+    // if (newData.email === "") {
+    //   await doc.deleteOne();
+    //   return true;
+    // }
+
+    await doc.updateOne(newData);
     return true;
   }
 }

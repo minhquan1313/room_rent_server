@@ -4,9 +4,12 @@ export type TCommonQuery = {
   limit?: number;
   page?: number;
 
-  count?: boolean;
-  saved?: boolean;
+  count?: any;
+  saved?: any;
 
   sort_field?: string;
   sort?: 1 | -1;
+
+  kw?: string;
 };
+export type TCreateBody<T> = Omit<T, "_id" | "updatedAt" | "createdAt">;

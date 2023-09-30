@@ -5,9 +5,22 @@ import PhoneService from "@/services/PhoneService";
 import RoleService from "@/services/RoleService";
 import UserService from "@/services/UserService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
-import { check } from "express-validator";
 import { Model, Query, Schema, Types, model } from "mongoose";
 
+export const populatePaths = [
+  {
+    path: "role",
+  },
+  {
+    path: "phone",
+  },
+  {
+    path: "email",
+  },
+  {
+    path: "gender",
+  },
+];
 export interface IUser {
   _id: Types.ObjectId;
 
@@ -27,8 +40,8 @@ export interface IUser {
   createdAt: Date;
 }
 interface IUserMethods {
-  addOrUpdatePhone(tell: string | number, region_code: string): Promise<boolean>;
-  addOrUpdateEmail(email: string): Promise<boolean>;
+  addOrUpdatePhone(tell: string | number, region_code: string, valid?: boolean): Promise<boolean>;
+  addOrUpdateEmail(email: string, valid?: boolean): Promise<boolean>;
   populateAll(): Promise<UserDocument>;
 }
 
@@ -103,21 +116,42 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
   {
     timestamps: true,
     methods: {
-      async addOrUpdatePhone(this: UserDocument, tell: string | number, region_code: string): Promise<boolean> {
+      async addOrUpdatePhone(this: UserDocument, tell: string | number, region_code: string, valid?: boolean): Promise<boolean> {
+        if (tell === "") {
+          // Xoá sđt
+          const phone = await PhoneNumber.findById(this.phone);
+          await phone?.deleteOne();
+
+          this.phone = null;
+          await this.save();
+          return true;
+        }
+
         if (this.phone) {
           // already has a phone number
           const phone = await PhoneNumber.findById(this.phone);
           if (!phone) {
             // phone not in collection
-            await PhoneService.create(this._id, tell, region_code, this.phone.toString());
+            await PhoneService.create({
+              _id: this.phone.toString(),
+              userId: this._id,
+              phone: tell,
+              region_code,
+              valid,
+            });
 
             return true;
           }
 
-          const p = await PhoneService.update(phone.e164_format, tell, region_code);
+          const p = await PhoneService.update({ oldPhone: phone.e164_format, phone: tell, region_code, valid });
           if (!p) return false;
         } else {
-          const p = await PhoneService.create(this._id, tell, region_code);
+          const p = await PhoneService.create({
+            userId: this._id,
+            phone: tell,
+            region_code,
+            valid,
+          });
           if (!p) return false;
 
           this.phone = p._id;
@@ -126,7 +160,17 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
 
         return true;
       },
-      async addOrUpdateEmail(this: UserDocument, email: string): Promise<boolean> {
+      async addOrUpdateEmail(this: UserDocument, email: string, valid?: boolean): Promise<boolean> {
+        if (email === "") {
+          const emailDoc = await Email.findById(this.email);
+          emailDoc?.deleteOne();
+
+          this.email = null;
+          await this.save();
+
+          return true;
+        }
+
         if (this.email) {
           // already has a email
           const emailDoc = await Email.findById(this.email);
@@ -136,6 +180,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
               _id: this.email,
               user: this._id,
               email,
+              verified: valid,
             });
 
             return true;
@@ -147,12 +192,14 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
             },
             {
               email,
+              verified: valid,
             }
           );
         } else {
           const p = await Email.create({
             user: this._id,
             email,
+            verified: valid,
           });
           if (!p) return false;
 
@@ -163,20 +210,7 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
         return true;
       },
       async populateAll(this: UserDocument) {
-        return await this.populate([
-          {
-            path: "role",
-          },
-          {
-            path: "phone",
-          },
-          {
-            path: "email",
-          },
-          {
-            path: "gender",
-          },
-        ]);
+        return await this.populate(populatePaths);
       },
     },
     statics: {
@@ -185,25 +219,31 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
           model("User")
             .find(query)
             //
-            .populate([
-              {
-                path: "gender",
-              },
-              {
-                path: "role",
-              },
-              {
-                path: "phone",
-              },
-              {
-                path: "email",
-              },
-            ])
+            .populate(populatePaths)
         );
       },
     },
   }
 );
+schema.index({
+  username: "text",
+  first_name: "text",
+  last_name: "text",
+  _id: "text",
+});
+schema.pre("deleteOne", { document: true }, async function (this: UserDocument, next) {
+  //
+  const _id = this._id;
+  await Email.findOneAndDelete({
+    user: _id,
+  });
+
+  await PhoneNumber.findOneAndDelete({
+    user: _id,
+  });
+
+  next();
+});
 
 const User = model<IUser, UserModel>("User", schema);
 

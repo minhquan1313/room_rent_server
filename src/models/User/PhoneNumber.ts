@@ -1,3 +1,4 @@
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import mongoose, { Model, Schema, Types } from "mongoose";
 
 export interface IPhoneNumber {
@@ -20,6 +21,7 @@ interface IPhoneNumberMethods {
 interface PhoneNumberModel extends Model<IPhoneNumber, {}, IPhoneNumberMethods> {
   // static methods
 }
+export type PhoneNumberDocument = MongooseDocConvert<IPhoneNumber, IPhoneNumberMethods>;
 const schema = new Schema<IPhoneNumber, PhoneNumberModel, IPhoneNumberMethods>(
   {
     user: {

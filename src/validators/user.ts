@@ -37,20 +37,25 @@ export const validateUpdateUser = () => {
         }
       }),
 
-    check("tell", "Số điện thoại không được trống").optional().not().isEmpty(),
     check("tell", "Số điện thoại đã tồn tại")
       .optional()
       .custom(async (value) => {
+        if (value === "") return;
         const doc = await PhoneService.findOne(value);
         if (doc) throw new Error();
       }),
 
-    check("region_code", "Thiếu mã vùng").optional().not().isEmpty(),
     check("tell", "Số điện thoại không hợp lệ")
       .optional()
       .if(check("region_code").exists())
       .custom(async (value, { req }) => {
+        if (value === "") return;
+
         const valid = PhoneService.isValid(req.body.tell, req.body.region_code);
+        console.log(`🚀 ~ .custom ~ req.body.tell:`, req.body.tell, req.body.region_code);
+
+        console.log(`🚀 ~ .custom ~ valid:`, valid);
+
         if (!valid) throw new Error();
       }),
 

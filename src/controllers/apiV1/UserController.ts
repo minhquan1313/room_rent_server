@@ -10,7 +10,7 @@ import { StatusCodes } from "http-status-codes";
 class UserController {
   // /api/v1/users/
   async get(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    const users = await UserService.get(req.query);
+    const users = await UserService.get(req.query as any);
 
     res.json(users);
   }
@@ -189,6 +189,20 @@ class UserController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
+  // async patchV2(req: RequestAuthenticate, res: Response, next: NextFunction) {
+  //   try {
+  //     const { userId } = req.params;
+  //     console.log(`🚀 ~ UserController ~ patch ~ userId:`, userId);
+
+  //     req.body.file = req.file;
+
+  //     await UserService.updateUserV2(userId, req.body);
+
+  //     res.status(HttpStatusCode.Ok).json({});
+  //   } catch (error: any) {
+  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+  //   }
+  // }
 
   // /api/v1/users/:userId
   async delete(req: RequestAuthenticate, res: Response, next: NextFunction) {

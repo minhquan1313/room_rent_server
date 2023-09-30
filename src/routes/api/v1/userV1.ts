@@ -41,6 +41,16 @@ router.post(
 
 // router.patch("/role/:userId", AuthenticateMiddleware, PermissionAdmin, UserController.patchChangeRole);
 
+// router.patch(
+//   "/v2/:userId",
+//   //
+//   AuthenticateMiddleware,
+//   UserSelfChangeOrAdminMiddleware,
+//   UploaderMiddlewareWithJson("single", "file"),
+//   validateUpdateUser(),
+//   ValidateHasUploadFilesMiddleware,
+//   UserController.patchV2
+// );
 router.patch(
   "/:userId",
   //

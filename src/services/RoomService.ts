@@ -92,8 +92,8 @@ class RoomService {
       saved,
       disabled,
 
-      limit = "99",
-      page = "1",
+      limit = 99,
+      page = 1,
 
       services,
       kw,
@@ -312,8 +312,8 @@ class RoomService {
     // q.sort([[sort_field || "createdAt", sort || -1]]);
 
     if (limit !== 0) {
-      q.skip(Number(limit) * (Number(page) - 1));
-      q.limit(Number(limit));
+      q.skip(limit * (page - 1));
+      q.limit(limit);
     }
 
     // if (projection) {
