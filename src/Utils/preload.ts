@@ -31,6 +31,8 @@ export async function doPreload() {
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
 
+  // await StatsServices.countRoomFromTo(dateFormat("2023-9-1").toDate(), dateFormat("2023-10-5").toDate(), "month");
+
   // PushNotificationService.triggerPushMsg(
   //   {
   //     endpoint:

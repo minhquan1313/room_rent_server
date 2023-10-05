@@ -20,7 +20,6 @@ export const CachedMiddleware = ({ key_, duration = DEFAULT_CACHE_TIME }: Cached
 
     if (cachedBody) {
       res.send(cachedBody);
-      // res.status(HttpStatusCode.NotModified).send(cachedBody);
       return;
     } else {
       res.sendResponse = res.send;

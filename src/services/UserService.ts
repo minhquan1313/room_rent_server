@@ -1,7 +1,10 @@
+import { Notification } from "@/models/Noti/Notification";
 import { Email } from "@/models/User/Email";
 import { Gender, TGender } from "@/models/User/Gender";
+import { LoginToken } from "@/models/User/LoginToken";
 import { PhoneNumber } from "@/models/User/PhoneNumber";
 import { Role, TRole } from "@/models/User/Role";
+import { Saved } from "@/models/User/Saved";
 import { IUser, User, populatePaths } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import MailService from "@/services/MailService";
@@ -65,7 +68,7 @@ class UserService {
     if ("_id" in qq) searchQuery._id = new Types.ObjectId(qq._id);
 
     if (kw) {
-      searchQuery.$text = { $search: kw };
+      searchQuery.$text = { $search: String(kw) };
     }
     if (role) {
       searchQuery.role = {
@@ -150,6 +153,10 @@ class UserService {
       await Email.findByIdAndDelete(user.email);
       await PhoneNumber.findByIdAndDelete(user.phone);
       await RoomService.deleteManyByUserId(user._id);
+      await Notification.deleteMany({ user: userId });
+      await LoginToken.deleteMany({ user: userId });
+      await Saved.deleteMany({ user: userId });
+      UploadService.unLinkUserFolderSync(userId);
 
       await user.deleteOne();
 
@@ -194,6 +201,8 @@ class UserService {
   }
 
   async updateUser(userId: string, { role, gender, email, email_verify, tell_verify, tell, region_code, password, file, file_to, ...rest }: Partial<BodyPayload>) {
+    console.log(`🚀 ~ UserService ~ updateUser ~ rest:`, rest);
+
     const user = (await User.findById(userId))!;
 
     if (file) {

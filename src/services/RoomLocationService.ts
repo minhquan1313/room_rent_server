@@ -85,6 +85,7 @@ class RoomLocationService {
   }
   async resolve(d: LocationSearchQuery = {}) {
     let { country, province, district, ward } = d;
+    console.log(`🚀 ~ RoomLocationService ~ resolve ~ d:`, d);
 
     if (!country || typeof country !== "string") return {};
 
@@ -103,6 +104,7 @@ class RoomLocationService {
         if (province && typeof province === "string") {
           // find district
           const province3rd = await Location3rdVNService.resolveProvince(province);
+          console.log(`🚀 ~ RoomLocationService ~ resolve ~ province3rd:`, province3rd);
 
           if (province3rd) {
             result["province"] = province3rd;
@@ -112,6 +114,8 @@ class RoomLocationService {
         if (district && typeof district === "string") {
           // find ward
           const district3rd = await Location3rdVNService.resolveDistrict(district);
+          console.log(`🚀 ~ RoomLocationService ~ resolve ~ district3rd:`, district3rd);
+
           if (district3rd) {
             result["district"] = district3rd;
           }
@@ -120,6 +124,8 @@ class RoomLocationService {
         if (ward && typeof ward === "string") {
           // find ward
           const ward3rd = await Location3rdVNService.resolveWard(ward);
+          console.log(`🚀 ~ RoomLocationService ~ resolve ~ ward3rd:`, ward3rd);
+
           if (ward3rd) {
             result["ward"] = ward3rd;
           }

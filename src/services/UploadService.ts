@@ -36,6 +36,28 @@ class UploadService {
   unLinkUserFileSync(srcForDb: string) {
     return this.unLinkFileSync(path.join(publicStaticUser, srcForDb));
   }
+  unLinkRoomFileSync(srcForDb: string) {
+    return this.unLinkFileSync(path.join(publicStaticUser, srcForDb));
+  }
+
+  unLinkUserFolderSync(userId: string) {
+    return this.unLinkFolderSync(path.join(publicStaticUser, "user", userId));
+  }
+  unLinkRoomFolderSync(roomId: string) {
+    return this.unLinkFolderSync(path.join(publicStaticUser, "room", roomId));
+  }
+  unLinkFolderSync(path: string) {
+    try {
+      fs.rmSync(path, { recursive: true, force: true });
+
+      return true;
+    } catch (error) {
+      console.log(`🚀 ~ UploadService ~ unLinkFolderSync ~ error:`, error);
+
+      return false;
+    }
+  }
+
   unLinkFileSync(path: string) {
     try {
       // console.log(`🚀 ~ UploadService ~ unLinkFileSync ~ path:`, path);

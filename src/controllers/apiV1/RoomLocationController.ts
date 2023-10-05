@@ -8,8 +8,6 @@ class RoomLocationController {
     try {
       const results = await RoomLocationService.getCountries();
 
-      // if(Object.keys(req.query).)
-
       res.json(results);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));

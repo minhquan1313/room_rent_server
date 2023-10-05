@@ -58,10 +58,15 @@ class Location3rdVNService {
   async getDistricts(provinceCode?: unknown): Promise<Location3rd[]> {
     try {
       const url =
-        typeof provinceCode === "string" && provinceCode
+        // typeof provinceCode === "string" &&
+        provinceCode
           ? //
-            `/districts/getByProvince?provinceCode=${provinceCode}&limit=-1`
+            `/districts/getByProvince?provinceCode=${String(provinceCode).padStart(2, "0")}&limit=-1`
           : `/districts/getAll`;
+
+      console.log(`🚀 ~ Location3rdVNService ~ getDistricts ~ provinceCode:`, provinceCode);
+      console.log(`🚀 ~ Location3rdVNService ~ getDistricts ~ url:`, url);
+
       const data = await fetcher.get<never, FetchData>(url);
 
       return data;
@@ -74,9 +79,10 @@ class Location3rdVNService {
   async getWards(districtCode?: unknown): Promise<Location3rd[]> {
     try {
       const url =
-        typeof districtCode === "string" && districtCode
+        // typeof districtCode === "string" &&
+        districtCode
           ? //
-            `/wards/getByDistrict?districtCode=${districtCode}&limit=-1`
+            `/wards/getByDistrict?districtCode=${String(districtCode).padStart(3, "0")}&limit=-1`
           : `/wards/getAll`;
       const data = await fetcher.get<never, FetchData>(url);
 

@@ -45,7 +45,7 @@ export interface IRoom {
   _id: Types.ObjectId;
 
   owner: Types.ObjectId;
-  room_type: Types.ObjectId;
+  room_type: Types.ObjectId | null;
   location: Types.ObjectId | null;
   images: Types.ObjectId[];
   services: Types.ObjectId[];

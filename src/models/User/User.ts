@@ -31,8 +31,8 @@ export interface IUser {
   image: string | null;
   owner_banner: string | null;
   disabled: boolean;
-  gender: Types.ObjectId;
-  role: Types.ObjectId;
+  gender: Types.ObjectId | null;
+  role: Types.ObjectId | null;
   phone: Types.ObjectId | null;
   email: Types.ObjectId | null;
 
@@ -229,21 +229,19 @@ schema.index({
   username: "text",
   first_name: "text",
   last_name: "text",
-  _id: "text",
 });
-schema.pre("deleteOne", { document: true }, async function (this: UserDocument, next) {
-  //
-  const _id = this._id;
-  await Email.findOneAndDelete({
-    user: _id,
-  });
+// schema.pre("deleteOne", { document: true }, async function (this: UserDocument, next) {
+//   const _id = this._id;
+//   await Email.findOneAndDelete({
+//     user: _id,
+//   });
 
-  await PhoneNumber.findOneAndDelete({
-    user: _id,
-  });
+//   await PhoneNumber.findOneAndDelete({
+//     user: _id,
+//   });
 
-  next();
-});
+//   next();
+// });
 
 const User = model<IUser, UserModel>("User", schema);
 

@@ -18,6 +18,8 @@ class UserController {
   // /api/v1/users/:userId
   async getSingle(req: Request, res: Response, next: NextFunction) {
     const { userId } = req.params;
+    console.log(`🚀 ~ UserController ~ getSingle ~ userId:`, userId);
+
     const userDoc = await User.findById(userId);
 
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("User not found"));
@@ -45,15 +47,12 @@ class UserController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
+
   // /api/v1/users/login
   async postLogin(req: Request, res: Response, next: NextFunction) {
     const { username, password } = req.body;
 
     const encodedPass = LoginTokenService.encodePassword(password);
-
-    // const userDoc = await User.findOne({
-    //   username,
-    // });
     const userDoc = await (
       await User.findOne({
         username,
@@ -66,11 +65,6 @@ class UserController {
       })
     )?.populateAll();
     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Tên đăng nhập hoặc mật khẩu sai`));
-
-    // if (userDoc.password === encodedPass || userDoc.password === password) {
-    // } else {
-    //   return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Mật khẩu không khớp`));
-    // }
 
     const user = userDoc.toObject();
     const { username: _username } = user;
@@ -86,9 +80,6 @@ class UserController {
       const { file } = req;
       req.body.file = file;
 
-      // if (file) {
-      //   const imgId = await UserService.imageUpload(file, userId);
-      // }
       const userDoc = await UserService.createUser(req.body);
 
       if (!userDoc) throw new Error(`Can't create user`);
@@ -104,75 +95,6 @@ class UserController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
-  // /api/v1/users/role/:userId
-  // async patchChangeRole(req: RequestAuthenticate, res: Response, next: NextFunction) {
-  //   try {
-  //     const { userId } = req.params;
-  //     const { role }: { role: TRole } = req.body;
-
-  //     const userDoc = await User.findById(userId).populate("role");
-  //     if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`User to change not found`));
-
-  //     // if ((userDoc.role as any).title === "admin" || role === "admin") {
-  //     //   // Changing admin role, or promote someone to be admin
-  //     //   return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Changing from or to <admin> role is not allow`));
-  //     // }
-
-  //     const user = await UserService.changeRole(userId, role);
-
-  //     return res.json(user);
-  //   } catch (error: any) {
-  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-  //   }
-  // }
-  // /api/v1/users/owner_banner/:userId
-  // async patchOwnerBanner(req: RequestAuthenticate, res: Response, next: NextFunction) {
-  //   try {
-  //     const { file } = req;
-  //     const { userId } = req.params;
-  //     if (!file) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No file`));
-
-  //     const newPath = await UploadService.userAvatarFileUpload({ file, userId });
-
-  //     const src = newPath.srcForDb;
-  //     const user = await UserService.updateUser(userId, { owner_banner: src });
-  //     console.log(`🚀 ~ UserController ~ patchImage ~ user:`, user);
-
-  //     res.json(user);
-  //   } catch (error: any) {
-  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-  //   }
-  // }
-  // /api/v1/users/image/:userId
-  // async patchImage(req: RequestAuthenticate, res: Response, next: NextFunction) {
-  //   try {
-  //     const { file } = req;
-  //     // {
-  //     //   fieldname: "image",
-  //     //   originalname: "nficon2016.ico",
-  //     //   encoding: "7bit",
-  //     //   mimetype: "image/vnd.microsoft.icon",
-  //     //   destination: "E:\\Workspace\\school\\quan_ly_nha_tro\\room_rent_server\\temp",
-  //     //   filename: "nficon2016_1693725805214_19296.ico",
-  //     //   path: "E:\\Workspace\\school\\quan_ly_nha_tro\\room_rent_server\\temp\\nficon2016_1693725805214_19296.ico",
-  //     //   size: 16958,
-  //     // };
-  //     console.log(`🚀 ~ UserController ~ patchImage ~ file:`, file);
-
-  //     const { userId } = req.params;
-  //     if (!file) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No file`));
-
-  //     const newPath = await UploadService.userAvatarFileUpload({ file, userId });
-
-  //     const src = newPath.srcForDb;
-  //     const user = await UserService.updateUser(userId, { image: src });
-  //     console.log(`🚀 ~ UserController ~ patchImage ~ user:`, user);
-
-  //     res.json(user);
-  //   } catch (error: any) {
-  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-  //   }
-  // }
 
   // /api/v1/users/:userId
   async patch(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -189,20 +111,6 @@ class UserController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
-  // async patchV2(req: RequestAuthenticate, res: Response, next: NextFunction) {
-  //   try {
-  //     const { userId } = req.params;
-  //     console.log(`🚀 ~ UserController ~ patch ~ userId:`, userId);
-
-  //     req.body.file = req.file;
-
-  //     await UserService.updateUserV2(userId, req.body);
-
-  //     res.status(HttpStatusCode.Ok).json({});
-  //   } catch (error: any) {
-  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-  //   }
-  // }
 
   // /api/v1/users/:userId
   async delete(req: RequestAuthenticate, res: Response, next: NextFunction) {

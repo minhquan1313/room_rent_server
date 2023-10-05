@@ -8,7 +8,7 @@ const objs: {
 };
 
 export function provinceImagePathResolve(province?: string) {
-  if (!province) return "";
+  if (!province) return undefined;
 
   let t = removeAccents(province.toLowerCase());
 
@@ -17,5 +17,5 @@ export function provinceImagePathResolve(province?: string) {
 
     return objs[key];
   }
-  return "";
+  return undefined;
 }

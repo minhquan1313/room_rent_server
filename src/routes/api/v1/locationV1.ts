@@ -22,7 +22,7 @@ router.get(
 router.get(
   "/provinces",
   //
-  CachedMiddleware(),
+  // CachedMiddleware(),
   RoomLocationController.getProvinces
 );
 router.get(
@@ -35,7 +35,7 @@ router.get(
 router.get(
   "/districts",
   //
-  CachedMiddleware(),
+  // CachedMiddleware(),
   RoomLocationController.getDistricts
 );
 router.get(
@@ -48,7 +48,7 @@ router.get(
 router.get(
   "/wards",
   //
-  CachedMiddleware(),
+  // CachedMiddleware(),
   RoomLocationController.getWards
 );
 router.get(

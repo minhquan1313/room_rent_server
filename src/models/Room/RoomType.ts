@@ -1,3 +1,5 @@
+import { Room } from "@/models/Room/Room";
+import RoomService from "@/services/RoomService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import mongoose, { Model, Schema, Types } from "mongoose";
 
@@ -30,12 +32,23 @@ const schema = new Schema<IRoomType, RoomTypeModel, IRoomTypeMethods>(
     display_name: {
       type: String,
       default: null,
+      trim: true,
+      minlength: 1,
     },
   },
   {
     timestamps: true,
   }
 );
+schema.pre("deleteOne", { document: true }, async function (this: IRoomType, next) {
+  // Remove all the assignment docs that reference the removed person.
+  const { _id } = this;
+
+  const rooms = await Room.find({ room_type: _id });
+  await RoomService.deleteMany(rooms.map((r) => r._id));
+
+  next();
+});
 
 const RoomType = mongoose.model<IRoomType, RoomTypeModel>("RoomType", schema);
 

@@ -1,5 +1,6 @@
 import { RoomImage, RoomImageDocument } from "@/models/Room/RoomImage";
 import UploadService from "@/services/UploadService";
+import { Types } from "mongoose";
 
 class RoomImageService {
   async autoReOrderDuplicateImages(roomId: string): Promise<RoomImageDocument[]> {
@@ -87,6 +88,11 @@ class RoomImageService {
     }
 
     return uploadedImageIds;
+  }
+
+  async deleteImagesOfRoom(roomId: string | Types.ObjectId) {
+    await RoomImage.deleteMany({ room: roomId });
+    UploadService.unLinkRoomFolderSync(String(roomId));
   }
 }
 

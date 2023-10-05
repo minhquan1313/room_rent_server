@@ -3,6 +3,7 @@ import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Room } from "@/models/Room/Room";
 import RoomImageService from "@/services/RoomImageService";
 import RoomService, { TRoomJSON } from "@/services/RoomService";
+import { HttpStatusCode } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -71,61 +72,47 @@ class RoomController {
        * Khi update ảnh có images[] gồm các id ảnh, thì dựa theo thứ tự id bên trong
        * mà gắn order lại theo thứ tự đó
        */
-      if (images && imagesOrders) {
-        await RoomImageService.reOrderImages(images, imagesOrders);
-        // await RoomImageService.reOrderImagesWithIdsOrdered(images);
-      }
-
-      let newImagesIds: string[] = Array.isArray(images) ? images : [];
-      if (Array.isArray(files) && files.length) {
-        let orders: number[] | boolean = true;
-
-        if (Array.isArray(imagesOrders)) {
-          orders = imagesOrders.slice(newImagesIds.length);
+      if (images) {
+        if (images && imagesOrders) {
+          await RoomImageService.reOrderImages(images, imagesOrders);
+          // await RoomImageService.reOrderImagesWithIdsOrdered(images);
         }
 
-        newImagesIds.push(...(await RoomImageService.roomImagesUpload(files, userId, roomId, orders)));
+        let newImagesIds: string[] = Array.isArray(images) ? images : [];
+        if (Array.isArray(files) && files.length) {
+          let orders: number[] | boolean = true;
+
+          if (Array.isArray(imagesOrders)) {
+            orders = imagesOrders.slice(newImagesIds.length);
+          }
+
+          newImagesIds.push(...(await RoomImageService.roomImagesUpload(files, userId, roomId, orders)));
+        }
+        await RoomService.update(roomId, {
+          ...req.body,
+          images: newImagesIds,
+        });
+      } else {
+        await RoomService.update(roomId, {
+          ...req.body,
+        });
       }
 
-      const room = await RoomService.update(roomId, {
-        ...req.body,
-        images: newImagesIds,
-      });
-      console.log(`🚀 ~ RoomController ~ patchEditRoom ~ room:`, room);
-
-      res.json(room);
-
-      next();
+      res.status(HttpStatusCode.Ok).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
+  async deleteRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
+    try {
+      const { roomId } = req.params;
 
-  // /api/v1/rooms/image/:roomId
-  // async postNewImagesToRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
-  //   try {
-  //     const { files } = req;
-  //     const { roomId } = req.params;
-
-  //     const { imagesOrder }: { imagesOrder?: number[] } = req.body;
-  //     if (!Array.isArray(files)) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`No images`));
-
-  //     const room = await Room.findById(roomId).populate("owner");
-  //     if (!room) return res.status(StatusCodes.BAD_REQUEST).json(errorResponse(`Room not exist`));
-
-  //     const userId = (room.owner as unknown as UserDocument)._id.toString();
-  //     const imgIds = await RoomService.roomImagesUpload(files, userId, roomId, imagesOrder);
-
-  //     const currentImg = (await RoomImage.find({ room: roomId })).map((r) => r._id.toString());
-  //     const imagesIds = Array.from(new Set([...currentImg, ...imgIds]));
-
-  //     const roomUpdated = await RoomService.update(roomId, { images: imagesIds });
-
-  //     res.json(roomUpdated?.images);
-  //   } catch (error: any) {
-  //     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
-  //   }
-  // }
+      await RoomService.delete(roomId);
+      res.status(HttpStatusCode.Ok).json({});
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
+  }
 }
 
 export default new RoomController();

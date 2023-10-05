@@ -13,23 +13,32 @@ class RoomServiceCateController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
-  patch(req: Request, res: Response, next: NextFunction) {
+  async patch(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(`ok`);
+      const { serviceCateId } = req.params;
+
+      await RoomServiceCategoryService.update(serviceCateId, req.body);
+
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
-  delete(req: Request, res: Response, next: NextFunction) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(`ok`);
+      const { serviceCateId } = req.params;
+
+      await RoomServiceCategoryService.delete(serviceCateId);
+
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
   }
   async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const docs = await RoomServiceCategoryService.getAll();
+      const docs = await RoomServiceCategoryService.list();
+
       res.json(docs);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));

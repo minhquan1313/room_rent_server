@@ -1,10 +1,12 @@
 import { proximityThreshold } from "@/constants/constants";
 import { IRoom, Room, populatePaths } from "@/models/Room/Room";
-import { RoomImage } from "@/models/Room/RoomImage";
 import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
 import { RoomService as RoomService_, TRoomService } from "@/models/Room/RoomService";
 import { RoomType, TRoomType } from "@/models/Room/RoomType";
 import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
+import { Saved } from "@/models/User/Saved";
+import RoomImageService from "@/services/RoomImageService";
+import { ModelToPayload } from "@/types/ModelToPayload";
 import { TCommonQuery } from "@/types/TCommonQuery";
 import mongoose, { FilterQuery, Types } from "mongoose";
 
@@ -39,16 +41,14 @@ export type TRoomJSON = {
   number_of_bathroom?: number;
   number_of_floor?: number;
 };
-export interface RoomSearchQuery extends TCommonQuery {
+
+export interface RoomSearchQuery extends TCommonQuery, ModelToPayload<IRoom> {
   kw?: string;
 
-  services?: string[];
-  room_type?: string;
   province?: string;
   district?: string;
   ward?: string;
 
-  usable_area: number;
   usable_area_from?: number;
   usable_area_to?: number;
 
@@ -67,30 +67,17 @@ export interface RoomSearchQuery extends TCommonQuery {
   number_of_floor_from?: number;
   number_of_floor_to?: number;
 
-  sort_field?: string;
-  sort?: 1 | -1;
-  disabled?: boolean;
   search_close_to?: string | boolean;
   search_close_to_lat?: string;
   search_close_to_long?: string;
 
   projection?: string;
-
-  // owner?: string;
-  // ...
-  // ?services=wifi,mt
-  // ?room_type=cc,nr
-  // ?kw=adwdawd
-  // ?province=ben tre
-  // ?district=adad
-  // ?ward=adwwd
 }
 class RoomService {
   async getAll(query2: RoomSearchQuery) {
     const {
       count,
       saved,
-      disabled,
 
       limit = 99,
       page = 1,
@@ -102,19 +89,6 @@ class RoomService {
       district,
       ward,
 
-      usable_area_from,
-      usable_area_to,
-      price_per_month_from,
-      price_per_month_to,
-      number_of_living_room_from,
-      number_of_living_room_to,
-      number_of_bedroom_from,
-      number_of_bedroom_to,
-      number_of_bathroom_from,
-      number_of_bathroom_to,
-      number_of_floor_from,
-      number_of_floor_to,
-
       search_close_to,
       search_close_to_lat,
       search_close_to_long,
@@ -124,13 +98,29 @@ class RoomService {
 
       projection,
 
-      ...query
+      ...qq
     } = query2;
+    console.log(`🚀 ~ RoomService ~ getAll ~ query2:`, query2);
 
-    const searchQuery: FilterQuery<IRoom> = query;
-    if ("owner" in searchQuery) searchQuery.owner = new Types.ObjectId(searchQuery.owner);
+    const searchQuery: FilterQuery<IRoom> = qq;
+    if ("owner" in qq) searchQuery.owner = new Types.ObjectId(searchQuery.owner);
+    if ("_id" in qq) searchQuery._id = new Types.ObjectId(qq._id);
+    if ("name" in qq)
+      searchQuery.name = {
+        $regex: new RegExp(qq.name!, "i"),
+      };
 
     if (services) {
+      // if (Array.isArray(room_type)) {
+      //   const ids = await RoomType.find({
+      //     title: { $in: room_type },
+      //   });
+      //   console.log(`🚀 ~ RoomService ~ getAll ~ ids:`, ids);
+
+      //   searchQuery.room_type = {
+      //     $in: ids.map((r) => r._id),
+      //   };
+      // }
       // const splitted = services.split(",");
 
       const serviceIds = (
@@ -150,100 +140,55 @@ class RoomService {
       // searchQuery.services = serviceIds;
     }
 
-    if (room_type) {
-      const id = await RoomType.findOne({ title: room_type });
+    if (room_type !== undefined) {
+      if (Array.isArray(room_type)) {
+        const ids = (
+          await RoomType.find({
+            title: {
+              $in: room_type,
+            },
+          })
+        ).map((r) => r._id);
 
-      searchQuery.room_type = id ?? undefined;
+        searchQuery.room_type = { $in: ids };
+      } else {
+        const id = (
+          await RoomType.findOne({
+            title: room_type,
+          })
+        )?._id;
+
+        searchQuery.room_type = id;
+      }
     }
 
     if (kw) {
       searchQuery.$text = { $search: kw };
     }
 
-    if (price_per_month_from) {
-      const [from, to] = [price_per_month_from, price_per_month_to];
+    // from - to
+    Object.keys(qq).forEach((key) => {
+      const fromIndex = key.lastIndexOf("_from");
+      const toIndex = key.lastIndexOf("_to");
 
-      searchQuery.price_per_month = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.price_per_month = {
-          $gte: from,
-          $lte: to,
+      if (fromIndex !== -1) {
+        const field = key.slice(0, fromIndex);
+        searchQuery[field] = {
+          ...searchQuery[field],
+          $gte: qq[key],
         };
-      }
-    }
-    if (usable_area_from) {
-      const [from, to] = [usable_area_from, usable_area_to];
 
-      searchQuery.usable_area = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.usable_area = {
-          $gte: from,
-          $lte: to,
+        delete searchQuery[key];
+      } else if (toIndex !== -1) {
+        const field = key.slice(0, toIndex);
+        searchQuery[field] = {
+          ...searchQuery[field],
+          $lte: qq[key],
         };
+
+        delete searchQuery[key];
       }
-    }
-    if (number_of_living_room_from) {
-      const [from, to] = [number_of_living_room_from, number_of_living_room_to];
-
-      searchQuery.number_of_living_room = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.number_of_living_room = {
-          $gte: from,
-          $lte: to,
-        };
-      }
-    }
-    if (number_of_bedroom_from) {
-      const [from, to] = [number_of_bedroom_from, number_of_bedroom_to];
-
-      searchQuery.number_of_bedroom = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.number_of_bedroom = {
-          $gte: from,
-          $lte: to,
-        };
-      }
-    }
-    if (number_of_bathroom_from) {
-      const [from, to] = [number_of_bathroom_from, number_of_bathroom_to];
-
-      searchQuery.number_of_bathroom = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.number_of_bathroom = {
-          $gte: from,
-          $lte: to,
-        };
-      }
-    }
-    if (number_of_floor_from) {
-      const [from, to] = [number_of_floor_from, number_of_floor_to];
-
-      searchQuery.number_of_floor = {
-        $gte: from,
-      };
-
-      if (to) {
-        searchQuery.number_of_floor = {
-          $gte: from,
-          $lte: to,
-        };
-      }
-    }
+    });
 
     if (search_close_to === "true" || province || district || ward) {
       let roomLocations: IRoomLocation[] = [];
@@ -294,7 +239,6 @@ class RoomService {
 
     // await Room.populate(q, populatePaths);
 
-    console.log(`🚀 ~ RoomService ~ getAll ~ saved:`, saved);
     if (saved !== undefined) {
       q.append({
         $lookup: {
@@ -306,27 +250,71 @@ class RoomService {
       });
     }
 
-    q.sort({
-      [sort_field || "createdAt"]: sort || -1,
-    });
-    // q.sort([[sort_field || "createdAt", sort || -1]]);
+    if (["province", "district", "ward", "room_type"].includes(sort_field as any)) {
+      if (sort_field === "room_type") {
+        q.append({
+          $lookup: {
+            from: "roomtypes",
+            foreignField: "_id",
+            localField: "room_type",
+            as: "room_type",
+          },
+        });
+        q.append({
+          $unwind: "$room_type",
+        });
+        q.append({
+          $sort: {
+            "room_type.display_name": sort || -1,
+          },
+        });
+      } else {
+        q.append({
+          $lookup: {
+            from: "roomlocations",
+            foreignField: "_id",
+            localField: "location",
+            as: "location",
+          },
+        });
+        q.append({
+          $unwind: "$location",
+        });
+
+        const key = `location.${sort_field}`;
+
+        q.append({
+          $sort: {
+            [key]: sort || -1,
+          },
+        });
+
+        // switch (sort_field) {
+        //   case "province":
+        //     q.append({
+        //       $sort: {
+        //         "location.province": sort || -1,
+        //       },
+        //     });
+        //     break;
+        // }
+      }
+    } else {
+      q.sort({
+        [sort_field || "createdAt"]: sort || -1,
+      });
+    }
 
     if (limit !== 0) {
       q.skip(limit * (page - 1));
       q.limit(limit);
     }
 
-    // if (projection) {
-    // q.distinct(projection);
-    // }
-
     if (count !== undefined) {
       const [count, data] = await Promise.all([qCount.exec(), q.exec()]);
       await Room.populate(data, populatePaths);
 
       return { data, count };
-
-      // const countDoc = await queryCount.exec();
     } else {
       const data = await q.exec();
 
@@ -365,23 +353,26 @@ class RoomService {
     if (location) await room.addOrUpdateLocation(location);
     if (images) await room.addOrUpdateImages(images);
 
-    return await room.updateOne({
+    await room.updateOne({
       ...rest,
       room_type: (room_type && (await RoomType.findOne({ title: room_type }))) || undefined,
     });
+
+    return true;
   }
 
   async delete(roomId: string | Types.ObjectId) {
     const room = await Room.findById(roomId);
     if (!room) return false;
 
-    await RoomLocation.deleteOne({ room });
+    await RoomLocation.deleteMany({ room });
     await RoomWithRoomService.deleteMany({ room });
 
     // TODO: make services to unlink
-    await RoomImage.deleteMany({ room });
+    await RoomImageService.deleteImagesOfRoom(roomId);
+    await Saved.deleteMany({ room: roomId });
   }
-  async deleteMany(roomsId: string[]) {
+  async deleteMany(roomsId: (string | Types.ObjectId)[]) {
     for await (const id of roomsId) {
       await this.delete(id);
     }

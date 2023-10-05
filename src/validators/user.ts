@@ -95,27 +95,32 @@ export const validateRegisterUser = () => {
 
     check("first_name", "Tên không được để trống").not().isEmpty(),
 
-    check("tell", "Số điện thoại không được trống").not().isEmpty(),
+    // check("tell", "Số điện thoại không được trống").optional().not().isEmpty(),
     check("tell", "Số điện thoại đã tồn tại")
       .optional()
       .custom(async (value, { req }) => {
+        if (value === "") return;
         const doc = await PhoneService.findOne(req.body.tell);
         if (doc) throw new Error();
       }),
 
-    check("region_code", "Thiếu mã vùng").not().isEmpty(),
+    // check("region_code", "Thiếu mã vùng").not().isEmpty(),
     check("tell", "Số điện thoại không hợp lệ")
       .optional()
       .if(check("region_code").exists())
       .custom(async (value, { req }) => {
+        if (value === "") return;
+
         const valid = PhoneService.isValid(req.body.tell, req.body.region_code);
         if (!valid) throw new Error();
       }),
 
-    check("email", "Email không hợp lệ").optional().isEmail(),
+    check("email", "Email không hợp lệ").optional().if(check("email").notEmpty()).isEmail(),
     check("email", "Email đã tồn tại")
       .optional()
       .custom(async (value, { req }) => {
+        if (value === "") return;
+
         const doc = await Email.findOne({ email: req.body.email });
         if (doc) throw new Error();
       }),

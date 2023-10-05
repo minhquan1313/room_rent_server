@@ -24,17 +24,6 @@ router.get(
   RoomController.getOrSearch
 );
 
-// router.post(
-//   "/image/:roomId",
-//   //
-//   AuthenticateMiddleware,
-//   UserSelfChangeOrAdminMiddleware,
-//   UploaderMiddlewareWithJson("array", "images"),
-//   validateEditRoom(),
-//   ValidateHasUploadFilesMiddleware,
-//   RoomController.postNewImagesToRoom
-// );
-
 router.post(
   "/",
   //
@@ -54,6 +43,14 @@ router.patch(
   validateEditRoom(),
   ValidateHasUploadFilesMiddleware,
   RoomController.patchEditRoom
+);
+
+router.delete(
+  "/:roomId",
+  //
+  AuthenticateMiddleware,
+  UserSelfChangeOrAdminMiddleware,
+  RoomController.deleteRoom
 );
 
 export { router as roomV1Router };
