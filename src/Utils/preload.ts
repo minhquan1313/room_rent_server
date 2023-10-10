@@ -30,7 +30,6 @@ export async function doPreload() {
 
   await createRoomServiceCategoryOnStart();
   await createRoomServicesOnStart();
-
   // await StatsServices.countRoomFromTo(dateFormat("2023-9-1").toDate(), dateFormat("2023-10-5").toDate(), "month");
 
   // PushNotificationService.triggerPushMsg(
@@ -91,6 +90,9 @@ export async function doPreload() {
   //     // console.log(`🚀 ~ setTimeout ~ error:`, String(error).includes("jwt expired"));
   //   }
   // }, 2000);
-
+  // const t = binarySearch(vnLocationData, ({ code }) => {
+  //   return [code === 12, code > 12];
+  // });
+  // console.log(`🚀 ~ t ~ t:`, t);
   console.log(`Preload DONE`);
 }

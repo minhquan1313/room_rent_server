@@ -3,7 +3,7 @@ import { Room } from "@/models/Room/Room";
 import { RoomLocation } from "@/models/Room/RoomLocation";
 import { User } from "@/models/User/User";
 import { TCommonQuery } from "@/types/TCommonQuery";
-import { PipelineStage } from "mongoose";
+import mongoose, { PipelineStage } from "mongoose";
 
 type TCountData = {
   label: string;

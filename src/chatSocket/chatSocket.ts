@@ -12,11 +12,7 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 interface SocketData {
   user?: IUser;
 }
-
-export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
-  const io = this;
-  console.log(`Chat socket connected - ${socket.data.user?.username ?? "Guest"}[${socket.data.user?._id || ""}]`);
-
+export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
   // Middleware check id
   io.use(async (s, next) => {
     const { token } = s.handshake.auth;
@@ -61,6 +57,10 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
 
     next();
   });
+}
+export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
+  const io = this;
+  console.log(`🚀 ~ Chat socket connected - ${socket.data.user?.username ?? "Guest"}[${socket.data.user?._id || ""}]`);
 
   socket.on(chatSocketAction.C_JOIN_ROOM, function (room: string) {
     try {
@@ -146,7 +146,7 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
   });
 
   socket.on(chatSocketAction.C_SEND_MSG, async function (msg: IChatMessagePayload) {
-    if (!socket.data.user) return;
+    if (!socket.data.user || !msg.sender || !msg.message) return;
     /**
      * Socket lúc này là SENDER
      */
@@ -198,8 +198,8 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         };
       }
 
-      io.adapter.rooms;
-      console.log(`🚀 ~ io.adapter.rooms:`, io.adapter.rooms);
+      // io.adapter.rooms;
+      // console.log(`🚀 ~ io.adapter.rooms:`, io.adapter.rooms);
 
       console.log(`🚀 ~ msg.receiver:`, msg.receiver);
       /**
@@ -224,21 +224,14 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         console.log(`🚀 ~ offlineClients.forEach ~ id:`, id);
 
         if (!socket.data.user) return;
-        // const user = await UserService.getSingle(id);
-        // if (!user) return;
 
         NotificationService.sendMessageNotification({
           nameOfUser: socket.data.user.first_name,
           toUserId: id,
-          message: msg.message,
+          message: msg.message!,
           chatRoomId: String(message.room),
         });
       });
-      // if (msg.receiver.every((id) => io.adapter.rooms.has(id))) {
-      //   msg.receiver.forEach((id) => {
-      //     NotificationService.sendMessageNotification();
-      //   });
-      // }
     } catch (error) {
       console.error(error);
     }

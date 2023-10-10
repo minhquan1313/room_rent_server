@@ -44,12 +44,10 @@ async function Auth(req: RequestAuthenticate, res: Response, next: NextFunction)
     if (type !== "Bearer") throw new Error();
 
     const loginToken = await LoginToken.findOne({ token });
-    console.log(`🚀 ~ Auth ~ loginToken:`, loginToken, req.originalUrl);
 
     if (!loginToken || loginToken.user === null) throw new Error();
 
     const user = await User.findOne(loginToken.user).populate("role");
-    console.log(`🚀 ~ Auth ~ user:`, user);
 
     const now = new Date();
 

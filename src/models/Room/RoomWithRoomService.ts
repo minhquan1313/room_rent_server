@@ -1,6 +1,25 @@
-import mongoose, { Schema } from "mongoose";
+import { MongooseDocConvert } from "@/types/MongooseDocConvert";
+import mongoose, { Model, Schema, Types } from "mongoose";
 
-const schema = new Schema(
+export interface IRoomWithRoomService {
+  _id: Types.ObjectId;
+
+  room: Types.ObjectId;
+  service: Types.ObjectId;
+
+  updatedAt: Date;
+  createdAt: Date;
+}
+interface IRoomWithRoomServiceMethods {
+  //  methods
+}
+
+interface RoomWithRoomServiceModel extends Model<IRoomWithRoomService, {}, IRoomWithRoomServiceMethods> {
+  // static methods
+}
+export type RoomWithRoomServiceDocument = MongooseDocConvert<IRoomWithRoomService, IRoomWithRoomServiceMethods>;
+
+const schema = new Schema<IRoomWithRoomService, RoomWithRoomServiceModel, IRoomWithRoomServiceMethods>(
   {
     room: {
       type: Schema.Types.ObjectId,
@@ -18,6 +37,6 @@ const schema = new Schema(
   }
 );
 
-const RoomWithRoomService = mongoose.model("RoomWithRoomService", schema);
+const RoomWithRoomService = mongoose.model<IRoomWithRoomService, RoomWithRoomServiceModel>("RoomWithRoomService", schema);
 
 export { RoomWithRoomService };

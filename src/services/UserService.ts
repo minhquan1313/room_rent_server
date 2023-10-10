@@ -118,11 +118,25 @@ class UserService {
     });
     const q = User.aggregate([{ $match: searchQuery }]);
 
-    q.sort({
-      [sort_field || "createdAt"]: sort || -1,
-    });
+    if (sort_field === "createdAt") {
+      q.sort({
+        [sort_field || "createdAt"]: sort || -1,
+      });
+    } else {
+      q.sort({
+        [sort_field || "createdAt"]: sort || -1,
+        createdAt: -1,
+      });
+    }
+
     if (limit !== 0) {
+      console.log(`🚀 ~ UserService ~ get ~ limit:`, limit);
+
       q.skip(limit * (page - 1));
+      console.log(`🚀 ~ UserService ~ get ~ limit * (page - 1):`, limit * (page - 1));
+
+      console.log(`🚀 ~ UserService ~ get ~ page:`, page);
+
       q.limit(limit);
     }
 

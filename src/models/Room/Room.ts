@@ -1,8 +1,7 @@
 import { RoomImage } from "@/models/Room/RoomImage";
-import { RoomLocation, RoomLocationDocument } from "@/models/Room/RoomLocation";
-import { RoomService, RoomServiceDocument, TRoomService } from "@/models/Room/RoomService";
+import { RoomLocation } from "@/models/Room/RoomLocation";
+import { RoomService, TRoomService } from "@/models/Room/RoomService";
 import { RoomType } from "@/models/Room/RoomType";
-import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { User } from "@/models/User/User";
 import { TRoomLocationPayload } from "@/services/RoomService";
 import UploadService from "@/services/UploadService";
@@ -86,12 +85,9 @@ export interface IRoom {
   createdAt: Date;
 }
 interface IRoomMethods {
-  getServices(): Promise<RoomServiceDocument[]>;
   addOrUpdateServices(services: TRoomService[]): Promise<void>;
   addOrUpdateImages(imagesIds: string[]): Promise<void>;
   addOrUpdateLocation(locationDetail: TRoomLocationPayload): Promise<void>;
-  getLocation(): Promise<RoomLocationDocument | null>;
-
   populateAll(): Promise<RoomDocument>;
 }
 
@@ -197,27 +193,14 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
   {
     timestamps: true,
     methods: {
-      async getServices(this: RoomDocument): Promise<RoomServiceDocument[]> {
-        const servicesId = (await RoomWithRoomService.find({ room: this._id })).map((r) => r.service);
-        const services_ = await RoomService.find({
-          _id: {
-            $in: [servicesId],
-          },
-        });
-
-        // const services = (await RoomWithRoomService.find({ room: this._id }).populate("service")).map((r) => r.service);
-
-        // return services as unknown as RoomServiceDocument[];
-
-        return services_;
-      },
       async addOrUpdateServices(this: RoomDocument, services): Promise<void> {
-        const rwrs = await RoomWithRoomService.find({ room: this._id }).populate("service");
+        // const rwrs = await RoomWithRoomService.find({ room: this._id }).populate("service");
 
-        // id of RoomService, NOT RoomWithRoomService._id
-        const currentServicesId = rwrs.map((r) => {
-          return (r.service as unknown as RoomServiceDocument)._id.toString();
-        });
+        // // id of RoomService, NOT RoomWithRoomService._id
+        // const currentServicesId = rwrs.map((r) => {
+        //   return (r.service as unknown as RoomServiceDocument)._id.toString();
+        // });
+        // const currentServicesId = this.services.map(String);
 
         // Make sure param _imagesId has real id in collection
         const servicesId = (
@@ -228,25 +211,25 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
           })
         ).map((r) => r._id.toString());
 
-        const idsToDelete = currentServicesId.filter((id) => !servicesId.includes(id));
+        // const idsToDelete = currentServicesId.filter((id) => !servicesId.includes(id));
 
-        idsToDelete.length &&
-          (await RoomWithRoomService.deleteMany({
-            room: this._id,
-            service: {
-              $in: idsToDelete,
-            },
-          }));
+        // idsToDelete.length &&
+        //   (await RoomWithRoomService.deleteMany({
+        //     room: this._id,
+        //     service: {
+        //       $in: idsToDelete,
+        //     },
+        //   }));
 
-        const idsToAdd = servicesId.filter((id) => !currentServicesId.includes(id));
+        // const idsToAdd = servicesId.filter((id) => !currentServicesId.includes(id));
 
-        idsToAdd.length &&
-          (await RoomWithRoomService.insertMany(
-            idsToAdd.map((service) => ({
-              room: this._id,
-              service,
-            }))
-          ));
+        // idsToAdd.length &&
+        //   (await RoomWithRoomService.insertMany(
+        //     idsToAdd.map((service) => ({
+        //       room: this._id,
+        //       service,
+        //     }))
+        //   ));
 
         this.services = servicesId as any;
         await this.save();
@@ -358,10 +341,6 @@ const schema = new Schema<IRoom, RoomModel, IRoomMethods>(
         }
 
         return;
-      },
-
-      async getLocation(this: RoomDocument) {
-        return await RoomLocation.findOne({ room: this._id });
       },
 
       async populateAll(this: RoomDocument) {

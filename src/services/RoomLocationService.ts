@@ -1,6 +1,6 @@
 import { removeAccents } from "@/Utils/removeAccents";
 import { RoomLocation } from "@/models/Room/RoomLocation";
-import Location3rdVNService from "@/services/Location3rdVNService";
+import Location3rdVNLocalService from "@/services/Location3rdVNLocalService";
 import { Location3rd } from "@/types/Location3rd";
 
 export type LocationSearchQuery = {
@@ -22,7 +22,7 @@ class RoomLocationService {
       // if (typeof country === "string") {
       // const n = parseInt(country);
       // if (n) results = await Location3rdVNService.getProvinces(n);
-      results = await Location3rdVNService.getCountries();
+      results = await Location3rdVNLocalService.getCountries();
       // }
     }
     return results;
@@ -41,7 +41,7 @@ class RoomLocationService {
       // if (typeof country === "string") {
       // const n = parseInt(country);
       // if (n) results = await Location3rdVNService.getProvinces(n);
-      results = await Location3rdVNService.getProvinces();
+      results = await Location3rdVNLocalService.getProvinces();
       // }
     }
 
@@ -59,7 +59,7 @@ class RoomLocationService {
         .distinct("district");
     } else {
       // if (typeof province === "string") {
-      results = await Location3rdVNService.getDistricts(province);
+      results = await Location3rdVNLocalService.getDistricts(province);
       // }
     }
 
@@ -77,7 +77,7 @@ class RoomLocationService {
         .distinct("ward");
     } else {
       // if (typeof district === "string") {
-      results = await Location3rdVNService.getWards(district);
+      results = await Location3rdVNLocalService.getWards(district);
       // }
     }
 
@@ -95,7 +95,7 @@ class RoomLocationService {
 
     switch (removeAccents(country.toLowerCase())) {
       case "viet nam":
-        const c = (await Location3rdVNService.getCountries())[0];
+        const c = (await Location3rdVNLocalService.getCountries())[0];
 
         if (c) {
           result["country"] = c;
@@ -103,7 +103,7 @@ class RoomLocationService {
 
         if (province && typeof province === "string") {
           // find district
-          const province3rd = await Location3rdVNService.resolveProvince(province);
+          const province3rd = await Location3rdVNLocalService.resolveProvince(province);
           console.log(`🚀 ~ RoomLocationService ~ resolve ~ province3rd:`, province3rd);
 
           if (province3rd) {
@@ -113,7 +113,7 @@ class RoomLocationService {
 
         if (district && typeof district === "string") {
           // find ward
-          const district3rd = await Location3rdVNService.resolveDistrict(district);
+          const district3rd = await Location3rdVNLocalService.resolveDistrict(district);
           console.log(`🚀 ~ RoomLocationService ~ resolve ~ district3rd:`, district3rd);
 
           if (district3rd) {
@@ -123,7 +123,7 @@ class RoomLocationService {
 
         if (ward && typeof ward === "string") {
           // find ward
-          const ward3rd = await Location3rdVNService.resolveWard(ward);
+          const ward3rd = await Location3rdVNLocalService.resolveWard(ward);
           console.log(`🚀 ~ RoomLocationService ~ resolve ~ ward3rd:`, ward3rd);
 
           if (ward3rd) {

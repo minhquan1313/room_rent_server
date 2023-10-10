@@ -128,7 +128,7 @@ class RoomService {
           title: { $in: services },
           // title: { $in: splitted },
         })
-      ).map((r) => r._id.toString());
+      ).map((r) => r._id);
       console.log(`🚀 ~ RoomService ~ getAll ~ serviceIds:`, serviceIds);
 
       // OR Condition (Have some the services user provided)
@@ -190,10 +190,10 @@ class RoomService {
       }
     });
 
-    if (search_close_to === "true" || province || district || ward) {
+    if (search_close_to === true || province || district || ward) {
       let roomLocations: IRoomLocation[] = [];
 
-      if (search_close_to === "true") {
+      if (search_close_to === true) {
         const lat = Number(search_close_to_lat);
         const long = Number(search_close_to_long);
         if (lat && long) {
@@ -210,6 +210,7 @@ class RoomService {
               },
             },
           ]);
+          console.log(`🚀 ~ RoomService ~ getAll ~ roomLocations:`, roomLocations, long, lat);
         }
       } else {
         const obj: FilterQuery<IRoomLocation> = {};
@@ -266,6 +267,7 @@ class RoomService {
         q.append({
           $sort: {
             "room_type.display_name": sort || -1,
+            createdAt: -1,
           },
         });
       } else {
@@ -286,23 +288,21 @@ class RoomService {
         q.append({
           $sort: {
             [key]: sort || -1,
+            createdAt: -1,
           },
         });
-
-        // switch (sort_field) {
-        //   case "province":
-        //     q.append({
-        //       $sort: {
-        //         "location.province": sort || -1,
-        //       },
-        //     });
-        //     break;
-        // }
       }
     } else {
-      q.sort({
-        [sort_field || "createdAt"]: sort || -1,
-      });
+      if (sort_field === "createdAt") {
+        q.sort({
+          [sort_field || "createdAt"]: sort || -1,
+        });
+      } else {
+        q.sort({
+          [sort_field || "createdAt"]: sort || -1,
+          createdAt: -1,
+        });
+      }
     }
 
     if (limit !== 0) {

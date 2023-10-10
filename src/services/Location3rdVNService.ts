@@ -1,4 +1,5 @@
 import { Location3rd } from "@/types/Location3rd";
+import { TLocationData } from "@/types/TLocationData";
 import { IDistrictResponse, IProvinceResponse, IWardResponse } from "@/types/TProvince";
 import axios from "axios";
 
@@ -9,10 +10,6 @@ const fetcher = axios.create({
   baseURL: "https://vn-public-apis.fpo.vn",
 });
 
-type FetchData = {
-  name: string;
-  code: string;
-}[];
 fetcher.interceptors.response.use(
   function (response) {
     const data = response.data as IWardResponse | IDistrictResponse | IProvinceResponse;
@@ -46,10 +43,12 @@ class Location3rdVNService {
   // Tỉnh/Thành phố
   async getProvinces(countryCode?: unknown): Promise<Location3rd[]> {
     try {
-      const data = await fetcher.get<never, FetchData>("/provinces/getAll?limit=-1");
+      const data = await fetcher.get<never, TLocationData>("/provinces/getAll?limit=-1");
 
       return data;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ getProvinces ~ error:`, error);
+
       return [];
     }
   }
@@ -67,10 +66,12 @@ class Location3rdVNService {
       console.log(`🚀 ~ Location3rdVNService ~ getDistricts ~ provinceCode:`, provinceCode);
       console.log(`🚀 ~ Location3rdVNService ~ getDistricts ~ url:`, url);
 
-      const data = await fetcher.get<never, FetchData>(url);
+      const data = await fetcher.get<never, TLocationData>(url);
 
       return data;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ getDistricts ~ error:`, error);
+
       return [];
     }
   }
@@ -84,10 +85,12 @@ class Location3rdVNService {
           ? //
             `/wards/getByDistrict?districtCode=${String(districtCode).padStart(3, "0")}&limit=-1`
           : `/wards/getAll`;
-      const data = await fetcher.get<never, FetchData>(url);
+      const data = await fetcher.get<never, TLocationData>(url);
 
       return data;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ getWards ~ error:`, error);
+
       return [];
     }
   }
@@ -95,30 +98,38 @@ class Location3rdVNService {
   async resolveProvince(value: string): Promise<Location3rd | null> {
     try {
       const url = `/provinces/getAll?q=${value}&cols=name,name_with_type`;
-      const data = await fetcher.get<never, FetchData>(url);
+      console.log(`🚀 ~ Location3rdVNService ~ resolveProvince ~ url:`, url);
+      const data = await fetcher.get<never, TLocationData>(url);
+      console.log(`🚀 ~ Location3rdVNService ~ resolveProvince ~ data:`, data);
 
       return data.length ? data[0] : null;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ resolveProvince ~ error:`, error);
+
       return null;
     }
   }
   async resolveDistrict(value: string): Promise<Location3rd | null> {
     try {
       const url = `/districts/getAll?q=${value}&cols=name,name_with_type`;
-      const data = await fetcher.get<never, FetchData>(url);
+      const data = await fetcher.get<never, TLocationData>(url);
 
       return data.length ? data[0] : null;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ resolveDistrict ~ error:`, error);
+
       return null;
     }
   }
   async resolveWard(value: string): Promise<Location3rd | null> {
     try {
       const url = `/wards/getAll?q=${value}&cols=name,name_with_type`;
-      const data = await fetcher.get<never, FetchData>(url);
+      const data = await fetcher.get<never, TLocationData>(url);
 
       return data.length ? data[0] : null;
     } catch (error) {
+      console.log(`🚀 ~ Location3rdVNService ~ resolveWard ~ error:`, error);
+
       return null;
     }
   }

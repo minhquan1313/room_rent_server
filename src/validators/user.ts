@@ -1,6 +1,7 @@
-import { isRoleAdmin } from "@/Utils/roleType";
+import { isRoleAdmin, isRoleTopAdmin, roleOrder } from "@/Utils/roleType";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Email } from "@/models/User/Email";
+import { Role } from "@/models/User/Role";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import PhoneService from "@/services/PhoneService";
@@ -65,6 +66,25 @@ export const validateUpdateUser = () => {
       .custom(async (email) => {
         const doc = await Email.findOne({ email });
         if (doc) throw new Error();
+      }),
+    check("role", "Vai trò không cho phép")
+      .optional()
+      .custom(async (v, { req }) => {
+        const { roleTitle } = req as RequestAuthenticate;
+        if (isRoleTopAdmin(roleTitle)) return;
+
+        /**
+         * Người thực hiện thay đổi phải từ admin cấp 2 trở lên
+         */
+        if (!isRoleAdmin(roleTitle)) throw new Error();
+
+        const role = await Role.findOne({ title: v });
+        if (!role) throw new Error(`Vai trò không tồn tại`);
+
+        /**
+         * Nếu vai trò sắp bị thay đổi lớn hơn vai trò của người thực hiện thay đổi
+         */
+        if (roleOrder(role.title) >= roleOrder(roleTitle)) throw new Error();
       }),
   ];
 };

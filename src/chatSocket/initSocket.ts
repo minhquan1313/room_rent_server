@@ -1,4 +1,4 @@
-import { chatSocket } from "@/chatSocket/chatSocket";
+import { chatMiddleware, chatSocket } from "@/chatSocket/chatSocket";
 import { Express } from "express-serve-static-core";
 import http from "http";
 import { Server } from "socket.io";
@@ -19,6 +19,8 @@ export default function initSocket(app: Express) {
   const chatIo = io.of("/chat");
 
   io.on("connection", gateSocket);
+
+  chatMiddleware(chatIo);
   chatIo.on("connection", chatSocket);
 
   // setInterval(() => {
