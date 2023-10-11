@@ -5,7 +5,6 @@ import MiscService from "@/services/MiscService";
 import NotificationService, { TSubscription } from "@/services/NotificationService";
 import PhoneService from "@/services/PhoneService";
 import SmsService from "@/services/SmsService";
-import { HttpStatusCode } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -20,7 +19,7 @@ class MiscController {
         code: token,
       });
 
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ makeVerifyEmail ~ error:`, error);
 
@@ -34,9 +33,9 @@ class MiscController {
       const result = await MailService.verifyCode(token);
 
       if (result) {
-        return res.status(HttpStatusCode.Ok).json({});
+        return res.status(StatusCodes.OK).json({});
       } else {
-        return res.status(HttpStatusCode.BadRequest).json({});
+        return res.status(StatusCodes.BAD_REQUEST).json({});
       }
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ verifyEmail ~ error:`, error);
@@ -85,7 +84,7 @@ class MiscController {
       });
       console.log(`🚀 ~ MiscController ~ subscribePush ~ doc:`, doc);
 
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
@@ -97,7 +96,7 @@ class MiscController {
 
       await MiscService.saveRoom(user!._id.toString(), req.body);
 
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

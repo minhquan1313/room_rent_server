@@ -3,7 +3,6 @@ import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { Room } from "@/models/Room/Room";
 import RoomImageService from "@/services/RoomImageService";
 import RoomService, { TRoomJSON } from "@/services/RoomService";
-import { HttpStatusCode } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -98,7 +97,7 @@ class RoomController {
         });
       }
 
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
@@ -108,7 +107,7 @@ class RoomController {
       const { roomId } = req.params;
 
       await RoomService.delete(roomId);
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

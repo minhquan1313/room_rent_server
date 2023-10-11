@@ -9,24 +9,21 @@ import express from "express";
 // /api/v1/rooms
 const router = express.Router();
 
-// let key = "";
 router.get(
-  "/:id",
   //
-  // CachedMiddleware(),
+  "/:id",
   RoomController.getSingle
 );
 
 router.get(
-  "/",
   //
-  // CachedMiddleware(),
+  "/",
   RoomController.getOrSearch
 );
 
 router.post(
-  "/",
   //
+  "/",
   AuthenticateMiddleware,
   UploaderMiddlewareWithJson("any"),
   validateAddRoom(),
@@ -35,8 +32,8 @@ router.post(
 );
 
 router.patch(
-  "/:roomId",
   //
+  "/:roomId",
   AuthenticateMiddleware,
   UserSelfChangeOrAdminMiddleware,
   UploaderMiddlewareWithJson("any"),
@@ -46,8 +43,8 @@ router.patch(
 );
 
 router.delete(
-  "/:roomId",
   //
+  "/:roomId",
   AuthenticateMiddleware,
   UserSelfChangeOrAdminMiddleware,
   RoomController.deleteRoom

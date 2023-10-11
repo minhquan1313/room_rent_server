@@ -113,34 +113,30 @@ class UserService {
 
     console.log(`🚀 ~ UserService ~ get ~ searchQuery:`, searchQuery);
 
-    const qCount = User.countDocuments({
-      ...searchQuery,
-    });
     const q = User.aggregate([{ $match: searchQuery }]);
 
-    if (sort_field === "createdAt") {
+    if (sort_field === "createdAt" || sort_field === undefined) {
       q.sort({
-        [sort_field || "createdAt"]: sort || -1,
+        ["createdAt"]: sort || -1,
+        _id: 1,
       });
     } else {
       q.sort({
-        [sort_field || "createdAt"]: sort || -1,
+        [sort_field]: sort || -1,
         createdAt: -1,
       });
     }
 
     if (limit !== 0) {
-      console.log(`🚀 ~ UserService ~ get ~ limit:`, limit);
-
       q.skip(limit * (page - 1));
-      console.log(`🚀 ~ UserService ~ get ~ limit * (page - 1):`, limit * (page - 1));
-
-      console.log(`🚀 ~ UserService ~ get ~ page:`, page);
 
       q.limit(limit);
     }
 
     if (count !== undefined) {
+      const qCount = User.countDocuments({
+        ...searchQuery,
+      });
       const [count, data] = await Promise.all([qCount.exec(), q.exec()]);
       await User.populate(data, populatePaths);
 
@@ -233,16 +229,6 @@ class UserService {
       }
     }
 
-    // if (!force) {
-    //   if (password && old_password) {
-    //     if (LoginTokenService.encodePassword(old_password) !== user.password) {
-    //       throw new Error(`Password not match`);
-    //     }
-    //   } else {
-    //     password = undefined;
-    //   }
-    // }
-
     await user.updateOne({
       ...rest,
       password: password ? LoginTokenService.encodePassword(password) : undefined,
@@ -259,11 +245,6 @@ class UserService {
           valid: tell_verify,
         });
     }
-    // if (tell_verify !== undefined) {
-    // PhoneService.updateValidId({
-
-    // })
-    // }
 
     if (email || email === "") await user.addOrUpdateEmail(email, email_verify);
     else if (email_verify !== undefined) {
@@ -273,21 +254,6 @@ class UserService {
         }));
     }
   }
-  // async changeRole(userId: string | Types.ObjectId, role: TRole) {
-  //   const r = await Role.findOne({
-  //     title: role,
-  //   });
-  //   const user = await User.findById(userId);
-  //   if (!r || !user) return null;
-
-  //   user.role = r._id;
-
-  //   await user.save();
-
-  //   const _user = await (await User.findOne({ _id: userId }))?.populateAll();
-  //   return _user;
-  // }
-  // async getImageOfUser(userId: string) {}
   async imageUpload(file: Express.Multer.File, userId: string | Types.ObjectId) {
     if (typeof userId !== "string") userId = userId.toString();
 
@@ -295,59 +261,6 @@ class UserService {
 
     return newPath;
   }
-
-  // async updateUserV2(userId: string, body: Partial<ModelToPayload<IUser>> & { file?: File; file_to?: "image" | "owner_banner" }) {
-  //   const { gender, role, email, phone } = body;
-
-  //   const user = (await User.findById(userId)) as UserDocument;
-
-  //   if (gender) {
-  //     user.gender = (await Gender.findOne(gender as any))!._id;
-  //   }
-
-  //   if (role) {
-  //     user.role = (await Role.findOne(role as any))!._id;
-  //   }
-
-  //   if (email) {
-  //     const _ = email as unknown as IEmail;
-
-  //     if (user.email) {
-  //       await MailService.updateEmail(user.email, _);
-  //       if (_.email === "") {
-  //         user.email = null;
-  //       }
-  //     } else {
-  //       const e = await MailService.createEmail({
-  //         ..._,
-  //         user: user._id,
-  //       });
-  //       user.email = e._id;
-  //     }
-  //   }
-
-  //   if (phone) {
-  //     const _ = phone as unknown as IPhoneNumber;
-
-  //     if (user.phone) {
-  //       if (_.e164_format === "" && _.national_number === undefined) {
-  //         await PhoneService.delete(user.phone);
-  //         user.phone = null;
-  //       } else {
-  //         await PhoneService.update(user.phone, _.e164_format, _.region_code);
-  //       }
-  //     } else {
-  //       const e = await PhoneService.create(user._id, _.e164_format || _.national_number, _.region_code)!;
-
-  //       user.phone = e._id;
-  //     }
-  //   }
-
-  //   await user.save();
-
-  //   return true;
-  //   //
-  // }
 }
 
 export default new UserService();

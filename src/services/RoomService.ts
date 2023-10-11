@@ -3,7 +3,6 @@ import { IRoom, Room, populatePaths } from "@/models/Room/Room";
 import { IRoomLocation, RoomLocation } from "@/models/Room/RoomLocation";
 import { RoomService as RoomService_, TRoomService } from "@/models/Room/RoomService";
 import { RoomType, TRoomType } from "@/models/Room/RoomType";
-import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { Saved } from "@/models/User/Saved";
 import RoomImageService from "@/services/RoomImageService";
 import { ModelToPayload } from "@/types/ModelToPayload";
@@ -366,7 +365,7 @@ class RoomService {
     if (!room) return false;
 
     await RoomLocation.deleteMany({ room });
-    await RoomWithRoomService.deleteMany({ room });
+    // await RoomWithRoomService.deleteMany({ room });
 
     // TODO: make services to unlink
     await RoomImageService.deleteImagesOfRoom(roomId);

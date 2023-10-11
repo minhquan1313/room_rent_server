@@ -71,7 +71,7 @@ export const validateUpdateUser = () => {
       .optional()
       .custom(async (v, { req }) => {
         const { roleTitle } = req as RequestAuthenticate;
-        if (isRoleTopAdmin(roleTitle)) return;
+        if (isRoleTopAdmin(roleTitle)) return true;
 
         /**
          * Người thực hiện thay đổi phải từ admin cấp 2 trở lên
@@ -100,6 +100,36 @@ export const validateLoginUser = () => {
 
 export const validateRegisterUser = () => {
   return [
+    check("role", "Vai trò không cho phép")
+      .optional()
+      .custom(async (v, { req }) => {
+        const { roleTitle } = req as RequestAuthenticate;
+
+        /**
+         * Nếu là top admin thì khỏi check
+         */
+        if (isRoleTopAdmin(roleTitle)) return true;
+
+        /**
+         * Nếu role lúc tạo không phải là admin thì thôi
+         */
+        if (!isRoleAdmin(v)) return true;
+
+        const role = await Role.findOne({ title: v });
+
+        /**
+         * Role lúc tạo có thể là admin mà người này lại là người
+         * lạ (đăng ký tài khoản) thì bắn lỗi
+         */
+        if (!roleTitle) throw new Error();
+
+        /**
+         * Người nào đó tạo user, nếu tạo user có role lớn hơn
+         * hoặc bằng mình thì không được
+         */
+        if (roleOrder(roleTitle) > roleOrder(role?.title)) return true;
+      }),
+
     check("username", "Tên người dùng không được trống").not().isEmpty(),
     // check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
     check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
@@ -115,33 +145,34 @@ export const validateRegisterUser = () => {
 
     check("first_name", "Tên không được để trống").not().isEmpty(),
 
-    // check("tell", "Số điện thoại không được trống").optional().not().isEmpty(),
     check("tell", "Số điện thoại đã tồn tại")
       .optional()
-      .custom(async (value, { req }) => {
-        if (value === "") return;
-        const doc = await PhoneService.findOne(req.body.tell);
+      .custom(async (tell) => {
+        if (tell === "") return;
+        const doc = await PhoneService.findOne(tell);
         if (doc) throw new Error();
       }),
 
-    // check("region_code", "Thiếu mã vùng").not().isEmpty(),
     check("tell", "Số điện thoại không hợp lệ")
       .optional()
       .if(check("region_code").exists())
-      .custom(async (value, { req }) => {
-        if (value === "") return;
-
-        const valid = PhoneService.isValid(req.body.tell, req.body.region_code);
+      .custom(async (tell, { req }) => {
+        if (tell === "") return;
+        if (!req.body.region_code) throw new Error(`Cần cung cấp mã vùng`);
+        const valid = PhoneService.isValid(tell, req.body.region_code);
         if (!valid) throw new Error();
       }),
 
-    check("email", "Email không hợp lệ").optional().if(check("email").notEmpty()).isEmail(),
+    check("email", "Email không hợp lệ")
+      //
+      .optional()
+      .if(check("email").notEmpty())
+      .isEmail(),
     check("email", "Email đã tồn tại")
       .optional()
-      .custom(async (value, { req }) => {
-        if (value === "") return;
-
-        const doc = await Email.findOne({ email: req.body.email });
+      .custom(async (email) => {
+        if (email === "") return;
+        const doc = await Email.findOne({ email });
         if (doc) throw new Error();
       }),
   ];

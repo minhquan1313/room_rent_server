@@ -36,6 +36,7 @@ const schema = new Schema<IChatMember, ChatMemberModel, IChatMemberMethods>(
     timestamps: true,
   }
 );
+schema.index({ room: 1, user: 1 }, { unique: true });
 
 const ChatMember = mongoose.model<IChatMember, ChatMemberModel>("ChatMember", schema);
 

@@ -2,11 +2,7 @@ import NotificationService from "@/services/NotificationService";
 import webpush from "web-push";
 
 // export type TNotificationAction = "openLink";
-export type NotificationPayload = {
-  title: string;
-  body: string;
-  link: string;
-};
+
 class PushNotificationService {
   init() {
     const vapidKeys = {
@@ -20,9 +16,9 @@ class PushNotificationService {
     webpush.setVapidDetails("mailto:2051012011binh@ou.edu.vn", vapidKeys.publicKey, vapidKeys.privateKey);
   }
 
-  async triggerPushMsg(subscription: webpush.PushSubscription, dataToSend: NotificationPayload) {
+  async triggerPushMsg(subscription: webpush.PushSubscription, dataToSend: string) {
     try {
-      return await webpush.sendNotification(subscription, JSON.stringify(dataToSend));
+      return await webpush.sendNotification(subscription, dataToSend);
     } catch (err: any) {
       if (err.statusCode === 404 || err.statusCode === 410) {
         console.log("Subscription has expired or is no longer valid: ", err);

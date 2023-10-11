@@ -3,7 +3,6 @@ import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { User } from "@/models/User/User";
 import LoginTokenService from "@/services/LoginTokenService";
 import UserService from "@/services/UserService";
-import { HttpStatusCode } from "axios";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -38,7 +37,6 @@ class UserController {
 
       await userDoc?.populateAll();
       const user = userDoc?.toObject();
-      // const user = await (await User.findOne(loginToken.user))?.populateAll();
 
       (user as any)["token"] = token;
 
@@ -77,9 +75,6 @@ class UserController {
   // /api/v1/users/
   async postCreateUser(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
-      const { file } = req;
-      req.body.file = file;
-
       const userDoc = await UserService.createUser(req.body);
 
       if (!userDoc) throw new Error(`Can't create user`);
@@ -88,7 +83,6 @@ class UserController {
 
       const token = await LoginTokenService.makeToken({ username: user.username, userId: user._id.toString() });
       (user as any)["token"] = token;
-      console.log(`🚀 ~ UserController ~ post ~ user.username:`, user.username);
 
       res.json(user);
     } catch (error: any) {
@@ -106,7 +100,7 @@ class UserController {
 
       await UserService.updateUser(userId, req.body);
 
-      res.status(HttpStatusCode.Ok).json({});
+      res.status(StatusCodes.OK).json({});
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

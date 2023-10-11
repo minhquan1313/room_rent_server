@@ -2,7 +2,6 @@ import { errorResponse } from "@/Utils/errorRes";
 import { RequestAuthenticate } from "@/middlewares/AuthenticateMiddleware";
 import { ChatRoom } from "@/models/ChatSocket/ChatRoom";
 import ChatSocketService, { TChatInRoomSearchPayload } from "@/services/ChatSocketService";
-import { HttpStatusCode } from "axios";
 import { NextFunction, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -32,7 +31,7 @@ class ChatController {
       await doc?.deleteOne();
       console.log(`done delete`);
 
-      res.status(HttpStatusCode.NoContent).send();
+      res.status(StatusCodes.NO_CONTENT).send();
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }
@@ -65,7 +64,7 @@ class ChatController {
       // await MiscService.saveRoom(user!._id.toString(), req.body);
 
       res.json(d);
-      // res.status(HttpStatusCode.NoContent);
+      // res.status(StatusCodes.NoContent);
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
     }

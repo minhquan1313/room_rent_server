@@ -37,28 +37,21 @@ export async function IsAuthenticatedMiddleware(req: RequestAuthenticate, res: R
 async function Auth(req: RequestAuthenticate, res: Response, next: NextFunction) {
   try {
     const bearerToken = req.headers.authorization;
-
     if (!bearerToken) throw new Error();
 
     const [type, token] = bearerToken.split(" ");
     if (type !== "Bearer") throw new Error();
 
     const loginToken = await LoginToken.findOne({ token });
-
     if (!loginToken || loginToken.user === null) throw new Error();
 
     const user = await User.findOne(loginToken.user).populate("role");
-
     const now = new Date();
-
-    // if (!user || !user.role || user.disabled || loginToken.expire.getTime() < now.getTime()) {
     if (!user || !user.role || loginToken.expire.getTime() < now.getTime()) {
-      // Token het han|user da bi vo hieu hoa, dang nhap lai
+      // Token hết hạn, user không tồn tại, user không có role
       await loginToken.deleteOne();
       throw new Error();
     }
-
-    // authorized success
 
     // extendsTime background
     LoginTokenService.extendsTime(loginToken.token);

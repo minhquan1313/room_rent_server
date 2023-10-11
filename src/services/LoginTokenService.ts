@@ -15,8 +15,7 @@ export interface ITokenRawParam {
 
 class LoginTokenService {
   /**
-   *
-   * @param username provide userId to auto create in database
+   * @param param0 thêm userId để tạo document trong database
    * @returns
    */
   async makeToken({ username, userId }: ITokenParam) {

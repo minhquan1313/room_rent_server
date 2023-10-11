@@ -1,5 +1,5 @@
 import { Notification } from "@/models/Noti/Notification";
-import PushNotificationService, { NotificationPayload } from "@/services/PushNotificationService";
+import PushNotificationService from "@/services/PushNotificationService";
 
 export type TSubscription = {
   user: string;
@@ -9,7 +9,11 @@ export type TSubscription = {
     auth: string;
   };
 };
-
+export type NotificationPayload = {
+  title: string;
+  body: string;
+  link: string;
+};
 class NotificationService {
   async newSubscribe(subscription: TSubscription) {
     const sub = await Notification.create(subscription);
@@ -46,16 +50,19 @@ class NotificationService {
 
     try {
       const msg: NotificationPayload = {
-        title: nameOfUser,
+        title: `Tin nhắn mới từ ` + nameOfUser,
         body: message,
         link: `/chat/${chatRoomId}`,
         // link: `${frontEnd}/chat/${chatRoomId}`,
       };
 
       for await (const receiverKey of receiverKeys) {
-        await PushNotificationService.triggerPushMsg(receiverKey, msg);
+        const result = await PushNotificationService.triggerPushMsg(receiverKey, JSON.stringify(msg));
+        console.log(`🚀 ~ NotificationService ~ forawait ~ result:`, result);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ error:`, error);
+    }
   }
 }
 

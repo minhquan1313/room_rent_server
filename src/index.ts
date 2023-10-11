@@ -14,8 +14,6 @@ import express from "express";
 import { queryParser } from "express-query-parser";
 import morgan from "morgan";
 
-// console.clear();
-
 db.connect();
 
 PushNotificationService.init();
@@ -24,19 +22,10 @@ SmsService.init();
 preload();
 createFolderFsSync(publicStaticUser);
 
-// const corsOptions = {
-//   origin: "*",
-//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-//   preflightContinue: false,
-//   optionsSuccessStatus: StatusCodes.NO_CONTENT,
-// };
-
 const app = express();
 app.use(cors());
-// app.use(cors(corsOptions));
 
 const server = initSocket(app);
-// fireBase.init();
 app.use(express.static(publicStaticServer));
 app.use(express.static(publicStaticUser));
 app.use(morgan("dev"));
@@ -57,6 +46,5 @@ app.use(router);
 
 const PORT = process.env.PORT;
 server.listen(PORT, () => {
-  // app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT} | http://localhost:${PORT}`);
 });

@@ -1,5 +1,4 @@
 import { RoomServiceCategory } from "@/models/Room/RoomServiceCategory";
-import { RoomWithRoomService } from "@/models/Room/RoomWithRoomService";
 import { MongooseDocConvert } from "@/types/MongooseDocConvert";
 import { FilterQuery, Model, Query, Schema, Types, model } from "mongoose";
 
@@ -93,14 +92,14 @@ const schema = new Schema<IRoomService, RoomServiceModel, IRoomServiceMethods>(
     },
   }
 );
-schema.pre("deleteOne", { document: true }, async function (this: IRoomService, next) {
-  // Remove all the assignment docs that reference the removed person.
-  const { _id } = this;
+// schema.pre("deleteOne", { document: true }, async function (this: IRoomService, next) {
+//   // Remove all the assignment docs that reference the removed person.
+//   const { _id } = this;
 
-  await RoomWithRoomService.deleteMany({ service: _id });
+//   await RoomWithRoomService.deleteMany({ service: _id });
 
-  next();
-});
+//   next();
+// });
 
 const RoomService = model<IRoomService, RoomServiceModel>("RoomService", schema);
 
