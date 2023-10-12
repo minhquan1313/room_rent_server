@@ -40,7 +40,6 @@ export function UploaderMiddlewareWithJson<T extends MulterFunctionKeys>(type: T
         for (const key in jsonP) {
           req.body[key] = jsonP[key];
         }
-        // return res.json("x");
         next();
       } catch (error: any) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));

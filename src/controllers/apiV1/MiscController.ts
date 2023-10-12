@@ -47,27 +47,20 @@ class MiscController {
     try {
       // tel as e164_format
       const { tel, code } = req.body;
-
       const result = await SmsService.verifyCode(tel, code);
-
       if (result.valid) {
         await PhoneService.updateValid(tel, true);
       }
-
       res.json(result);
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ verifyTel ~ error:`, error);
-
       return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
     }
   }
   async makeVerifyTel(req: RequestAuthenticate, res: Response, next: NextFunction) {
     try {
       const { tel } = req.body;
-      console.log(`🚀 ~ MiscController ~ makeVerifyTel ~ tel:`, tel);
-
       const result = await SmsService.makeVerifyCode(tel);
-
       res.json(result);
     } catch (error: any) {
       return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));

@@ -13,7 +13,7 @@ export function binarySearch<T>(arr: T[], callback: (mid: T) => [isMatch, isBigg
   if (r === undefined) r = arr.length - 1;
 
   if (r >= l) {
-    const mid = Math.ceil(l + (r - l) / 2); // Tương đương (l+r)/2 nhưng ưu điểm tránh tràn số khi l,r lớn
+    const mid = Math.ceil(l + (r - l) / 2);
 
     const [isMatch, isBigger] = callback(arr[mid]);
 

@@ -180,11 +180,12 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
               _id: this.email,
               user: this._id,
               email,
-              verified: valid,
+              verified: Boolean(valid),
             });
 
             return true;
           }
+          console.log(`🚀 ~ addOrUpdateEmail ~ valid:`, valid);
 
           await Email.findOneAndUpdate(
             {
@@ -192,14 +193,14 @@ const schema = new Schema<IUser, UserModel, IUserMethods>(
             },
             {
               email,
-              verified: valid,
+              verified: Boolean(valid),
             }
           );
         } else {
           const p = await Email.create({
             user: this._id,
             email,
-            verified: valid,
+            verified: Boolean(valid),
           });
           if (!p) return false;
 

@@ -39,17 +39,6 @@ class LoginTokenService {
 
     return token;
   }
-  // verify(token: string) {
-  //   try {
-  //     const check = jwt.verify(token, process.env.PRIVATE_JWT_KEY);
-
-  //     return check;
-  //   } catch (error) {
-  //     console.log(`🚀 ~ LoginTokenService ~ verify ~ error:`, error);
-
-  //     return false;
-  //   }
-  // }
   encodePassword(password: string) {
     const token = JWTService.sign(password);
 
@@ -84,16 +73,6 @@ class LoginTokenService {
   }
 
   async getUserByToken(token: string) {
-    const loginToken = await LoginToken.findOne({ token });
-
-    if (!loginToken || loginToken.user === null) return null;
-
-    const user = await User.findOne(loginToken.user);
-
-    return user;
-  }
-
-  async getUserByTokenAndLean(token: string) {
     const loginToken = await LoginToken.findOne({ token });
 
     if (!loginToken || loginToken.user === null) return null;

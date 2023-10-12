@@ -360,27 +360,19 @@ schema.index({
   description: "text",
 });
 
-// schema.pre("find", function (next) {
-//   this.sort({
-//     createdAt: -1,
-//   });
-
-//   next();
-// });
-
 const Room = model<IRoom, RoomModel>("Room", schema);
 
 const validateAddRoom = () => {
   return [
     check("owner", "Chủ sở hữu không tồn tại")
       .optional()
-      .custom(async (value, { req }) => {
-        const doc = await User.findOne({ _id: req.body.owner });
+      .custom(async (owner) => {
+        const doc = await User.findOne({ _id: owner });
         if (!doc) throw new Error();
       }),
 
-    check("room_type", "Kiểu phòng không tồn tại").custom(async (value, { req }) => {
-      const doc = await RoomType.findOne({ title: req.body.room_type });
+    check("room_type", "Kiểu phòng không tồn tại").custom(async (title) => {
+      const doc = await RoomType.findOne({ title });
       if (!doc) throw new Error();
     }),
 
@@ -397,19 +389,9 @@ const validateAddRoom = () => {
     check("location.long", "Long phải là số").if(check("location").exists()).isNumeric(),
 
     check("location.country", "Cung cấp quốc gia").optional().if(check("location").exists()).not().isEmpty(),
-
     check("location.province", "Cung cấp province").if(check("location").exists()).not().isEmpty(),
-    // check("location.province_code", "Cung cấp province_code").if(check("location").exists()).not().isEmpty(),
-    // check("location.province_code", "province_code phải là số").if(check("location").exists()).isNumeric(),
-
     check("location.district", "Cung cấp district").if(check("location").exists()).not().isEmpty(),
-    // check("location.district_code", "Cung cấp district_code").if(check("location").exists()).not().isEmpty(),
-    // check("location.district_code", "district_code phải là số").if(check("location").exists()).isNumeric(),
-
     check("location.ward", "Cung cấp ward").if(check("location").exists()).not().isEmpty(),
-    // check("location.ward_code", "Cung cấp ward_code").if(check("location").exists()).not().isEmpty(),
-    // check("location.ward_code", "ward_code phải là số").if(check("location").exists()).isNumeric(),
-
     check("location.detail_location", "Cung cấp detail_location").if(check("location").exists()).not().isEmpty(),
 
     check("services", "Dịch vụ sai").optional().isArray(),

@@ -48,29 +48,33 @@ class UserController {
 
   // /api/v1/users/login
   async postLogin(req: Request, res: Response, next: NextFunction) {
-    const { username, password } = req.body;
+    try {
+      const { username, password } = req.body;
 
-    const encodedPass = LoginTokenService.encodePassword(password);
-    const userDoc = await (
-      await User.findOne({
-        username,
-        $or: [
-          {
-            password: encodedPass,
-          },
-          { password },
-        ],
-      })
-    )?.populateAll();
-    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Tên đăng nhập hoặc mật khẩu sai`));
+      const encodedPass = LoginTokenService.encodePassword(password);
+      const userDoc = await (
+        await User.findOne({
+          username,
+          $or: [
+            {
+              password: encodedPass,
+            },
+            { password },
+          ],
+        })
+      )?.populateAll();
+      if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Tên đăng nhập hoặc mật khẩu sai`));
 
-    const user = userDoc.toObject();
-    const { username: _username } = user;
+      const user = userDoc.toObject();
+      const { username: _username } = user;
 
-    const token = await LoginTokenService.makeToken({ username: _username, userId: userDoc._id.toString() });
-    (user as any)["token"] = token;
+      const token = await LoginTokenService.makeToken({ username: _username, userId: userDoc._id.toString() });
+      (user as any)["token"] = token;
 
-    res.json(user);
+      res.json(user);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+    }
   }
   // /api/v1/users/
   async postCreateUser(req: RequestAuthenticate, res: Response, next: NextFunction) {

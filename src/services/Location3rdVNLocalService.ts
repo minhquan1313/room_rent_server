@@ -38,11 +38,11 @@ class Location3rdVNLocalService {
 
         if (index === -1) return [];
 
-        const data: Location3rd[] = vnProvince[index].districts.map(({ code, name }) => ({
+        const data: Location3rd[] = vnProvince[index]?.districts.map(({ code, name }) => ({
           code: String(code),
           name: name,
         }));
-        return data;
+        return data || [];
       } else {
         //
         return vnDistrict.map(({ code, name }) => ({

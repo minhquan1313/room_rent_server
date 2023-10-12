@@ -7,7 +7,7 @@ import { Saved } from "@/models/User/Saved";
 import RoomImageService from "@/services/RoomImageService";
 import { ModelToPayload } from "@/types/ModelToPayload";
 import { TCommonQuery } from "@/types/TCommonQuery";
-import mongoose, { FilterQuery, Types } from "mongoose";
+import { FilterQuery, Types } from "mongoose";
 
 export interface TRoomLocationPayload extends Omit<IRoomLocation, "_id" | "room" | "updatedAt" | "createdAt" | "lat_long"> {
   lat: number;
@@ -110,18 +110,6 @@ class RoomService {
       };
 
     if (services) {
-      // if (Array.isArray(room_type)) {
-      //   const ids = await RoomType.find({
-      //     title: { $in: room_type },
-      //   });
-      //   console.log(`🚀 ~ RoomService ~ getAll ~ ids:`, ids);
-
-      //   searchQuery.room_type = {
-      //     $in: ids.map((r) => r._id),
-      //   };
-      // }
-      // const splitted = services.split(",");
-
       const serviceIds = (
         await RoomService_.find({
           title: { $in: services },
@@ -204,7 +192,7 @@ class RoomService {
                   coordinates: [long, lat],
                 },
                 distanceField: "distance",
-                maxDistance: proximityThreshold,
+                maxDistance: proximityThreshold, // = 10km
                 spherical: true,
               },
             },
@@ -329,11 +317,8 @@ class RoomService {
     return room[0] ?? null;
   }
   async create(userId: string | Types.ObjectId, { services, room_type, images, location, ...rest }: TRoomJSON) {
-    const _id = new mongoose.mongo.ObjectId();
-
     const room = await Room.create({
       ...rest,
-      _id,
       room_type: await RoomType.findOne({ title: room_type }),
       owner: userId,
     });
@@ -365,11 +350,11 @@ class RoomService {
     if (!room) return false;
 
     await RoomLocation.deleteMany({ room });
-    // await RoomWithRoomService.deleteMany({ room });
 
-    // TODO: make services to unlink
     await RoomImageService.deleteImagesOfRoom(roomId);
     await Saved.deleteMany({ room: roomId });
+
+    await room.deleteOne();
   }
   async deleteMany(roomsId: (string | Types.ObjectId)[]) {
     for await (const id of roomsId) {

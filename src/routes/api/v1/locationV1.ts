@@ -9,52 +9,44 @@ const router = express.Router();
 router.get(
   "/countries",
   //
-  CachedMiddleware(),
   RoomLocationController.getCountries
 );
 router.get(
   "/countries-all",
   //
-  CachedMiddleware({ duration }),
   RoomLocationController.getCountriesAll
 );
 
 router.get(
   "/provinces",
   //
-  // CachedMiddleware(),
   RoomLocationController.getProvinces
 );
 router.get(
   "/provinces-all",
   //
-  CachedMiddleware({ duration }),
   RoomLocationController.getProvincesAll
 );
 
 router.get(
   "/districts",
   //
-  // CachedMiddleware(),
   RoomLocationController.getDistricts
 );
 router.get(
   "/districts-all",
   //
-  CachedMiddleware({ duration }),
   RoomLocationController.getDistrictsAll
 );
 
 router.get(
   "/wards",
   //
-  // CachedMiddleware(),
   RoomLocationController.getWards
 );
 router.get(
   "/wards-all",
   //
-  CachedMiddleware({ duration }),
   RoomLocationController.getWardsAll
 );
 

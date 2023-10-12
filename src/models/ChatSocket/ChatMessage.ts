@@ -26,6 +26,7 @@ const schema = new Schema<IChatMessage, ChatMessageModel, IChatMessageMethods>(
       type: Schema.Types.ObjectId,
       ref: "ChatRoom",
       required: true,
+      index: 1,
     },
     sender: {
       type: Schema.Types.ObjectId,

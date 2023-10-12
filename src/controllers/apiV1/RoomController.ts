@@ -72,9 +72,8 @@ class RoomController {
        * mà gắn order lại theo thứ tự đó
        */
       if (images) {
-        if (images && imagesOrders) {
+        if (imagesOrders && images[0]) {
           await RoomImageService.reOrderImages(images, imagesOrders);
-          // await RoomImageService.reOrderImagesWithIdsOrdered(images);
         }
 
         let newImagesIds: string[] = Array.isArray(images) ? images : [];

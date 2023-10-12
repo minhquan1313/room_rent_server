@@ -3,11 +3,11 @@ import { VerificationInstance } from "twilio/lib/rest/verify/v2/service/verifica
 import { VerificationCheckInstance } from "twilio/lib/rest/verify/v2/service/verificationCheck";
 
 class SmsService {
-  CLIENT?: Twilio;
+  CLIENT: Twilio;
 
-  VERIFY_ID?: string;
+  VERIFY_ID: string;
   // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-  init() {
+  constructor() {
     const { TWILIO_ACCOUNT_ID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_ID } = process.env;
     if (!TWILIO_ACCOUNT_ID) throw new Error(`Missing TWILIO_ACCOUNT_ID`);
     if (!TWILIO_AUTH_TOKEN) throw new Error(`Missing TWILIO_AUTH_TOKEN`);
@@ -17,21 +17,15 @@ class SmsService {
     this.VERIFY_ID = TWILIO_VERIFY_ID;
   }
 
-  makeVerifyCode(toTel: string) {
+  makeVerifyCode(tel: string) {
     return new Promise<VerificationInstance>((rs, rj) => {
-      if (!this.CLIENT || !this.VERIFY_ID) throw new Error(`Init SmsService first`);
-
       this.CLIENT.verify.v2
         .services(this.VERIFY_ID)
         .verifications.create({
-          to: toTel,
+          to: tel,
           channel: "sms",
         })
-        .then((verification) => {
-          console.log(`🚀 ~ SmsService ~ .then ~ verification:`, verification);
-
-          rs(verification);
-        })
+        .then(rs)
         .catch((error) => {
           console.log(`🚀 ~ SmsService ~ makeVerifyCode ~ error:`, error);
 
@@ -41,8 +35,6 @@ class SmsService {
   }
   verifyCode(ofTel: string, code: string) {
     return new Promise<VerificationCheckInstance>((rs, rj) => {
-      if (!this.CLIENT || !this.VERIFY_ID) throw new Error(`Init SmsService first`);
-
       this.CLIENT.verify.v2
         .services(this.VERIFY_ID)
         .verificationChecks.create({ to: ofTel, code })

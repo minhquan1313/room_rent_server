@@ -35,17 +35,7 @@ class NotificationService {
   }
 
   async sendMessageNotification({ nameOfUser, toUserId, message, chatRoomId }: { nameOfUser: string; toUserId: string; message: string; chatRoomId: string }) {
-    console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ message:`, message);
-
-    console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ toUserId:`, toUserId);
-
-    console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ nameOfUser:`, nameOfUser);
-
-    //
-
     const receiverKeys = await this.getSubscribeKeys(toUserId);
-    console.log(`🚀 ~ NotificationService ~ sendMessageNotification ~ receiverKey:`, receiverKeys);
-
     if (!receiverKeys || !receiverKeys.length) return;
 
     try {
@@ -53,7 +43,6 @@ class NotificationService {
         title: `Tin nhắn mới từ ` + nameOfUser,
         body: message,
         link: `/chat/${chatRoomId}`,
-        // link: `${frontEnd}/chat/${chatRoomId}`,
       };
 
       for await (const receiverKey of receiverKeys) {

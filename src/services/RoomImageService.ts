@@ -72,8 +72,6 @@ class RoomImageService {
     } else {
       orders = Array(files.length).fill(undefined);
     }
-    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ autoOrder:`, autoOrder);
-    console.log(`🚀 ~ RoomService ~ roomImagesUpload ~ orders:`, orders);
 
     let i = 0;
     for await (const file of files) {

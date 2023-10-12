@@ -7,8 +7,6 @@ import initSocket from "@/chatSocket/initSocket";
 import db from "@/config/db";
 import { publicStaticServer, publicStaticUser } from "@/constants/constants";
 import router from "@/routes";
-import PushNotificationService from "@/services/PushNotificationService";
-import SmsService from "@/services/SmsService";
 import cors from "cors";
 import express from "express";
 import { queryParser } from "express-query-parser";
@@ -16,8 +14,8 @@ import morgan from "morgan";
 
 db.connect();
 
-PushNotificationService.init();
-SmsService.init();
+// PushNotificationService.init();
+// SmsService.init();
 
 preload();
 createFolderFsSync(publicStaticUser);

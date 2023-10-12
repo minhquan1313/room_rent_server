@@ -19,8 +19,6 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
 
     if (!token) {
       const error = new Error(`Missing token`);
-      console.error(`🚀 ~ io.use ~ error:`, error);
-
       return next(error);
     }
 
@@ -28,8 +26,6 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
 
     if (!user) {
       const error = new Error(`User not exist`);
-      console.error(`🚀 ~ io.use ~ error:`, error);
-
       return next(error);
     }
 
@@ -37,12 +33,9 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
     return next();
   });
 
-  io.use((s, next) => {
-    // console.log(`🚀 ~ Joining ${s.data.user._id.toString()}`);
-    // console.log(s.data.user);
-
-    if (s.data.user) {
-      s.join(s.data.user._id.toString());
+  io.use((socket, next) => {
+    if (socket.data.user) {
+      socket.join(socket.data.user._id.toString());
     } else {
       const error = new Error(`Missing s.data.user`);
       console.error(`🚀 ~ io.use ~ error:`, error);
@@ -104,36 +97,19 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
 
     console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG msg:`, msg);
 
-    /**
-     * Socket lúc này là SENDER
-     */
-    // return;
     const uId = String(socket.data.user._id);
-    // console.log(usersSettingSeen, new Date().getTime());
 
     try {
-      // if (Object.hasOwn(usersSettingSeen, uId)) {
-      //   /**
-      //    * Trường hợp 1 user đăng nhập trên nhiều thiết bị, khi nhận được 1 tin nhắn và nhiều thiết bị đều focus
-      //    * vào tin nhắn đó, thì sẽ có 1 loạt event seen từ 1 user sẽ được gửi vào đây, nên ta cần cấm trường hợp này
-      //    * để tránh tạo ra nhiều document không cần thiết
-      //    */
-      //   console.log(`Có user đang gửi seen`);
+      /**
+       * Trường hợp 1 user đăng nhập trên nhiều thiết bị, khi nhận được 1 tin nhắn và nhiều thiết bị đều focus
+       * vào tin nhắn đó, thì sẽ có 1 loạt event seen từ 1 user sẽ được gửi vào đây, nên ta cần cấm trường hợp này
+       * để tránh tạo ra nhiều document không cần thiết bằng cách tạo khoá chính cho cả 2 message ID và user seen ID
+       */
 
-      //   return;
-      // }
-
-      // usersSettingSeen[uId] = 1;
       const seen = await ChatSocketService.createSeen(uId, msg);
       console.log(`🚀 ~ seen:`, seen);
 
       if (!seen) return;
-
-      // receivers.forEach((userId) => {
-      //   console.log(`🚀 ~ receivers.forEach ~ userId:`, userId, receivers);
-
-      //   socket.to(userId).emit(chatSocketAction.S_SEEN_MSG, seen);
-      // });
 
       /**
        * Receiver lúc này là gồm tất cả mọi người trong chat, và đương nhiên gồm thằng sender
@@ -141,6 +117,8 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
       socket.in(receivers).emit(chatSocketAction.S_SEEN_MSG, seen);
       socket.emit(chatSocketAction.S_SEEN_MSG, seen);
     } catch (error) {
+      console.log(`🚀chatSocketAction.C_SEEN_MSG ~ error:`, error);
+
       // console.error(error);
     }
   });
@@ -211,18 +189,13 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
        */
       socket.in(msg.receiver).in(uId).emit(chatSocketAction.S_SEND_MSG, message);
       socket.emit(chatSocketAction.S_SEND_MSG, message);
-      console.log(`🚀 ~ message:`, message);
 
       /**
        * Bắn thông báo đẩy cho các client đang offline
        */
-
       const offlineClients = msg.receiver.filter((id) => !io.adapter.rooms.has(id));
-      console.log(`🚀 ~ offlineClients:`, offlineClients);
 
       offlineClients.forEach((id) => {
-        console.log(`🚀 ~ offlineClients.forEach ~ id:`, id);
-
         if (!socket.data.user) return;
 
         NotificationService.sendMessageNotification({
