@@ -1,9 +1,4 @@
-import { createRoomServicesOnStart } from "@/models/Room/RoomService";
-import { createRoomServiceCategoryOnStart } from "@/models/Room/RoomServiceCategory";
-import { createRoomTypeOnStart } from "@/models/Room/RoomType";
-import { createGenderOnStart } from "@/models/User/Gender";
-import { autoCreateRolesOnStart } from "@/models/User/Role";
-import { createAdminOnStart } from "@/models/User/User";
+import { testData } from "@/config/testData/testData";
 import console from "console";
 import mongoose from "mongoose";
 
@@ -21,15 +16,18 @@ export default function preload() {
 }
 
 export async function doPreload() {
-  createRoomTypeOnStart();
+  // createRoomTypeOnStart();
 
-  await createGenderOnStart();
-  await autoCreateRolesOnStart();
+  // await createGenderOnStart();
+  // await autoCreateRolesOnStart();
 
-  await createAdminOnStart();
+  // await createAdminOnStart();
 
-  await createRoomServiceCategoryOnStart();
-  await createRoomServicesOnStart();
+  // await createRoomServiceCategoryOnStart();
+  // await createRoomServicesOnStart();
+
+  await testData.add();
+
   // await StatsServices.countRoomFromTo(dateFormat("2023-9-1").toDate(), dateFormat("2023-10-5").toDate(), "month");
 
   // PushNotificationService.triggerPushMsg(
