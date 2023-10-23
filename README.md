@@ -4,7 +4,7 @@ Hướng dẫn các bước chạy dự án - Yêu cầu làm từng bước
 
   Cài MongoDB Compass: truy cập https://www.mongodb.com/try/download/compass
 
-  Sau khi cài xong, ở sidebar bên trái, góc gần trên cùng, có dòng chữ New connection + Click vào thì bảng New Connectioh sẽ cho chỉnh sửa URI, gõ vào URI mongodb://localhost:27017 Bấm Save & Connect
-  hoặc Connect
+  Sau khi cài xong, ở sidebar bên trái, góc gần trên cùng, có dòng chữ "New connection +" => Click vào thì bảng New Connection sẽ cho chỉnh sửa URI, gõ vào URI "mongodb://localhost:27017" Bấm "Save &
+  Connect" hoặc "Connect"
 
-  Mở terminal/cmd ở folder dự án (xxx/yyy/room_rent_server) và gõ đoạn code sau npm t
+  Mở terminal/cmd ở folder dự án (xxx/yyy/room_rent_server) và gõ đoạn code sau "npm run dev"
