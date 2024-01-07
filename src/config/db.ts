@@ -6,6 +6,7 @@ const db = {
 
     try {
       if (DB_URL) {
+        console.log(`Connecting to db`);
         await mongoose.connect(DB_URL);
         console.log(`Connect to db SUCCESS`);
       } else {

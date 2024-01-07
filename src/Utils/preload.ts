@@ -16,6 +16,7 @@ export default function preload() {
 }
 
 export async function doPreload() {
+  console.log("Preload starting");
   // createRoomTypeOnStart();
 
   // await createGenderOnStart();
