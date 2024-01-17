@@ -1,0 +1,8 @@
+.vscode
+temp
+userDataUpload
+mongodb
+node_modules
+.git
+
+Dockerfile
