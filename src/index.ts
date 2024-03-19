@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(
   queryParser({
     parseBoolean: true,
-    parseNumber: true,
+    // parseNumber: true,
   })
 );
 

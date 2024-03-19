@@ -1,3 +1,4 @@
+import logger from "@/Utils/logger";
 import { chatSocketAction } from "@/constants/chatSocketActions";
 import { IChatMessage } from "@/models/ChatSocket/ChatMessage";
 import { IUser } from "@/models/User/User";
@@ -12,6 +13,7 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 interface SocketData {
   user?: IUser;
 }
+
 export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
   // Middleware check id
   io.use(async (s, next) => {
@@ -25,8 +27,7 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
     const user = await LoginTokenService.getUserByToken(token);
 
     if (!user) {
-      const error = new Error(`User not exist`);
-      return next(error);
+      return next(new Error(`User not exist`));
     }
 
     s.data.user = user;
@@ -37,10 +38,7 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
     if (socket.data.user) {
       socket.join(socket.data.user._id.toString());
     } else {
-      const error = new Error(`Missing s.data.user`);
-      console.error(`🚀 ~ io.use ~ error:`, error);
-
-      return next(error);
+      return next(new Error(`Missing s.data.user`));
     }
 
     /**
@@ -51,6 +49,7 @@ export function chatMiddleware(io: Namespace<DefaultEventsMap, DefaultEventsMap,
     next();
   });
 }
+
 export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>, socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>) {
   const io = this;
   console.log(`🚀 ~ Chat socket connected - ${socket.data.user?.username ?? "Guest"}[${socket.data.user?._id || ""}]`);
@@ -63,27 +62,26 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
 
       socket.join(room);
     } catch (error) {
-      console.error(error);
+      logger(`🚀 ~ file: chatSocket.ts:67 ~ error:`, error);
     }
   });
   socket.on(chatSocketAction.C_LEAVE_ROOM, function (room: string) {
     try {
       socket.leave(room);
     } catch (error) {
-      console.error(error);
+      logger(`🚀 ~ file: chatSocket.ts:74 ~ error:`, error);
     }
   });
 
   socket.on(chatSocketAction.C_DELETE_ROOM, async function (msg: IChatMessagePayload) {
-    console.log(`🚀 chatSocketAction.C_DELETE_ROOM ~ msg:`, msg);
-
     /**
      * Socket lúc này là SENDER
      */
     try {
+      console.log(`🚀 chatSocketAction.C_DELETE_ROOM ~ msg:`, msg);
       msg.members?.forEach(({ user }) => socket.to(user as unknown as string).emit(chatSocketAction.S_DELETE_ROOM, msg));
     } catch (error) {
-      console.error(error);
+      logger(`🚀 ~ file: chatSocket.ts:86 ~ error:`, error);
     }
   });
 
@@ -92,14 +90,13 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
   // } = {};
 
   socket.on(chatSocketAction.C_SEEN_MSG, async function (msg: IChatMessage, receivers: string[]) {
-    if (!socket.data.user) return;
-    console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG receivers:`, receivers);
-
-    console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG msg:`, msg);
-
-    const uId = String(socket.data.user._id);
-
     try {
+      if (!socket.data.user) return;
+      console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG receivers:`, receivers);
+
+      console.log(`🚀 ~ chatSocketAction.C_SEEN_MSG msg:`, msg);
+
+      const uId = String(socket.data.user._id);
       /**
        * Trường hợp 1 user đăng nhập trên nhiều thiết bị, khi nhận được 1 tin nhắn và nhiều thiết bị đều focus
        * vào tin nhắn đó, thì sẽ có 1 loạt event seen từ 1 user sẽ được gửi vào đây, nên ta cần cấm trường hợp này
@@ -118,20 +115,17 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
       socket.emit(chatSocketAction.S_SEEN_MSG, seen);
     } catch (error) {
       console.log(`🚀chatSocketAction.C_SEEN_MSG ~ error:`, error);
-
-      // console.error(error);
     }
   });
 
   socket.on(chatSocketAction.C_SEND_MSG, async function (msg: IChatMessagePayload) {
-    if (!socket.data.user || !msg.sender || !msg.message) return;
-    /**
-     * Socket lúc này là SENDER
-     */
-    const uId = String(socket.data.user._id);
-    console.log(`🚀 ~ uId:`, uId);
-
     try {
+      if (!socket.data.user || !msg.sender || !msg.message) return;
+      /**
+       * Socket lúc này là SENDER
+       */
+      const uId = String(socket.data.user._id);
+      console.log(`🚀 ~ uId:`, uId);
       console.log(socket.data);
 
       let message: TChatList = undefined as never;
@@ -206,15 +200,19 @@ export function chatSocket(this: Namespace<DefaultEventsMap, DefaultEventsMap, D
         });
       });
     } catch (error) {
-      console.error(error);
+      logger(`🚀 ~ file: chatSocket.ts:207 ~ error:`, error);
     }
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected chat: ${socket.data.user ? socket.data.user._id : `Guest`}`);
+    try {
+      console.log(`User disconnected chat: ${socket.data.user ? socket.data.user._id : `Guest`}`);
 
-    if (socket.data.user) {
-      socket.broadcast.to(socket.data.user._id.toString()).emit(chatSocketAction.S_USER_ONLINE_STATUS, socket.data.user._id.toString(), false);
+      if (socket.data.user) {
+        socket.broadcast.to(socket.data.user._id.toString()).emit(chatSocketAction.S_USER_ONLINE_STATUS, socket.data.user._id.toString(), false);
+      }
+    } catch (error) {
+      logger(`🚀 ~ file: chatSocket.ts:219 ~ socket.on ~ error:`, error);
     }
   });
 }

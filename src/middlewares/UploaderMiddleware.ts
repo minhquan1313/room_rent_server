@@ -42,7 +42,7 @@ export function UploaderMiddlewareWithJson<T extends MulterFunctionKeys>(type: T
         }
         next();
       } catch (error: any) {
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500001", error.toString()));
       }
     },
   ];

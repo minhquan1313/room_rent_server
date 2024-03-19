@@ -9,25 +9,33 @@ import { StatusCodes } from "http-status-codes";
 class UserController {
   // /api/v1/users/
   async get(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    const users = await UserService.get(req.query as any);
+    try {
+      const users = await UserService.get(req.query as any);
 
-    res.json(users);
+      res.json(users);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", String(error)));
+    }
   }
 
   // /api/v1/users/:userId
   async getSingle(req: Request, res: Response, next: NextFunction) {
-    const { userId } = req.params;
-    console.log(`🚀 ~ UserController ~ getSingle ~ userId:`, userId);
+    try {
+      const { userId } = req.params;
+      console.log(`🚀 ~ UserController ~ getSingle ~ userId:`, userId);
 
-    const userDoc = await User.findById(userId);
+      const userDoc = await User.findById(userId);
 
-    if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("User not found"));
+      if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("404002"));
 
-    await userDoc.populateAll();
+      await userDoc.populateAll();
 
-    const user = userDoc.toObject();
+      const user = userDoc.toObject();
 
-    res.json(user);
+      res.json(user);
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
+    }
   }
 
   // /api/v1/users/login-token
@@ -42,7 +50,7 @@ class UserController {
 
       res.json(user);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 
@@ -63,7 +71,7 @@ class UserController {
           ],
         })
       )?.populateAll();
-      if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse(`Tên đăng nhập hoặc mật khẩu sai`));
+      if (!userDoc) return res.status(StatusCodes.NOT_FOUND).json(errorResponse("404001", `Tên đăng nhập hoặc mật khẩu sai`));
 
       const user = userDoc.toObject();
       const { username: _username } = user;
@@ -73,7 +81,7 @@ class UserController {
 
       res.json(user);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   // /api/v1/users/
@@ -90,7 +98,7 @@ class UserController {
 
       res.json(user);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 
@@ -106,19 +114,21 @@ class UserController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 
   // /api/v1/users/:userId
   async delete(req: RequestAuthenticate, res: Response, next: NextFunction) {
-    const { userId } = req.params;
+    try {
+      const { userId } = req.params;
 
-    if (!(await UserService.deleteUser(userId))) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(`Can't delete`));
+      await UserService.deleteUser(userId);
+
+      res.status(StatusCodes.NO_CONTENT).json();
+    } catch (error: any) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
-
-    res.status(StatusCodes.NO_CONTENT).json();
   }
 }
 

@@ -23,7 +23,7 @@ class MiscController {
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ makeVerifyEmail ~ error:`, error);
 
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", String(error)));
     }
   }
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
@@ -40,7 +40,7 @@ class MiscController {
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ verifyEmail ~ error:`, error);
 
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", String(error)));
     }
   }
   async verifyTel(req: Request, res: Response, next: NextFunction) {
@@ -50,11 +50,22 @@ class MiscController {
       const result = await SmsService.verifyCode(tel, code);
       if (result.valid) {
         await PhoneService.updateValid(tel, true);
+      } else {
+        return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403103"));
       }
       res.json(result);
     } catch (error: any) {
       console.log(`🚀 ~ MiscController ~ verifyTel ~ error:`, error);
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+
+      let code = StatusCodes.INTERNAL_SERVER_ERROR;
+      let response = errorResponse("500", String(error));
+
+      if (error?.status === 404) {
+        code = StatusCodes.FORBIDDEN;
+        response = errorResponse("403102", String(error));
+      }
+
+      return res.status(code).json(response);
     }
   }
   async makeVerifyTel(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -63,7 +74,7 @@ class MiscController {
       const result = await SmsService.makeVerifyCode(tel);
       res.json(result);
     } catch (error: any) {
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", String(error)));
     }
   }
   async subscribePush(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -79,7 +90,7 @@ class MiscController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async saveRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -91,7 +102,7 @@ class MiscController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 }

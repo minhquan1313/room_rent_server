@@ -1,5 +1,6 @@
 import ApiController from "@/controllers/apiV1/ApiController";
 import { chatV1Router } from "@/routes/api/v1/chatV1";
+import { dangerDatabaseV1Router } from "@/routes/api/v1/dangerDatabaseV1";
 import { genderV1Router } from "@/routes/api/v1/genderV1";
 import { locationV1Router } from "@/routes/api/v1/locationV1";
 import { miscV1Router } from "@/routes/api/v1/miscV1";
@@ -28,6 +29,7 @@ router.use("/misc", miscV1Router);
 router.use("/chat", chatV1Router);
 router.use("/stats", statsV1Router);
 router.use("/saved", savedV1Router);
+router.use("/dangerDatabase", dangerDatabaseV1Router);
 
 router.use("/", ApiController.index);
 

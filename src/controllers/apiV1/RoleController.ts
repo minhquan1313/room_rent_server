@@ -27,7 +27,7 @@ class RoleController {
 
       res.json(await RoleService.getUserAssignableRoles());
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 }

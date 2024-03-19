@@ -12,6 +12,7 @@ export type TDistrict = {
   codename: string;
   division_type: string;
   short_codename: string;
+  province_code: number;
   wards: TWard[];
 };
 export type TWard = {
@@ -20,4 +21,5 @@ export type TWard = {
   codename: string;
   division_type: string;
   short_codename: string;
+  district_code: number;
 };

@@ -11,7 +11,7 @@ export async function PermissionAdmin(req: RequestAuthenticate, res: Response, n
   const acceptRoles: (typeof roleTitle)[] = ["admin"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Bạn không có quyền làm việc này.`));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }
 
 export async function PermissionAdminLvl2(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -20,7 +20,7 @@ export async function PermissionAdminLvl2(req: RequestAuthenticate, res: Respons
   const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Bạn không có quyền làm việc này.`));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }
 
 export async function PermissionPlaceOwner(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -29,7 +29,7 @@ export async function PermissionPlaceOwner(req: RequestAuthenticate, res: Respon
   const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2", "owner"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Bạn không có quyền làm việc này.`));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }
 
 export async function PermissionUser(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -38,7 +38,7 @@ export async function PermissionUser(req: RequestAuthenticate, res: Response, ne
   const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2", "user"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse(`Bạn không có quyền làm việc này.`));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }
 
 export async function PermissionPlaceOwnerAndUser(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -47,7 +47,7 @@ export async function PermissionPlaceOwnerAndUser(req: RequestAuthenticate, res:
   const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2", "owner", "user"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("Bạn không có quyền làm việc này."));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }
 export const PermissionOf =
   (...role: TRole[]) =>
@@ -57,7 +57,7 @@ export const PermissionOf =
     const acceptRoles: (typeof roleTitle)[] = [...role, "admin"];
     if (acceptRoles.includes(roleTitle)) return next();
 
-    return res.status(StatusCodes.FORBIDDEN).json(errorResponse("Bạn không có quyền làm việc này."));
+    return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
   };
 
 export async function UserSelfChangeOrAdminMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -77,9 +77,9 @@ export async function UserSelfChangeOrAdminMiddleware(req: RequestAuthenticate, 
     }
     if (user!._id.toString() === uId) return next();
 
-    return res.status(StatusCodes.FORBIDDEN).json(errorResponse("Bạn không có quyền làm việc này."));
+    return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
   } catch (error: any) {
-    return res.status(StatusCodes.FORBIDDEN).json(errorResponse(error.toString()));
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
   }
 }
 
@@ -94,5 +94,5 @@ export async function PermissionUserRoleSet(req: RequestAuthenticate, res: Respo
   const acceptRoles: (typeof roleTitle)[] = ["admin", "admin_lvl_2", "owner", "user"];
   if (acceptRoles.includes(roleTitle)) return next();
 
-  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("Bạn không có quyền làm việc này."));
+  return res.status(StatusCodes.FORBIDDEN).json(errorResponse("403002"));
 }

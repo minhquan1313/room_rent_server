@@ -3,6 +3,8 @@ temp
 userDataUpload
 mongodb
 node_modules
+dump
 .git
 
 Dockerfile
+docker-compose.yml

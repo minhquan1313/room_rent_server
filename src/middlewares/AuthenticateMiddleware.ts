@@ -18,7 +18,7 @@ export type RequestAuthenticate = Request & {
 export async function AuthenticateMiddleware(req: RequestAuthenticate, res: Response, next: NextFunction) {
   if (await Auth(req, res, next)) return next();
 
-  res.status(StatusCodes.UNAUTHORIZED).json(errorResponse(`Unauthorized`));
+  res.status(StatusCodes.UNAUTHORIZED).json(errorResponse("401001"));
 }
 
 /**

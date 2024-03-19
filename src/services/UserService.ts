@@ -156,26 +156,20 @@ class UserService {
   }
 
   async deleteUser(userId: string) {
-    try {
-      const user = await User.findById(userId);
-      if (!user) return false;
+    const user = await User.findById(userId);
+    if (!user) return false;
 
-      await Email.findByIdAndDelete(user.email);
-      await PhoneNumber.findByIdAndDelete(user.phone);
-      await RoomService.deleteManyByUserId(user._id);
-      await Notification.deleteMany({ user: userId });
-      await LoginToken.deleteMany({ user: userId });
-      await Saved.deleteMany({ user: userId });
-      UploadService.unLinkUserFolderSync(userId);
+    await Email.findByIdAndDelete(user.email);
+    await PhoneNumber.findByIdAndDelete(user.phone);
+    await RoomService.deleteManyByUserId(user._id);
+    await Notification.deleteMany({ user: userId });
+    await LoginToken.deleteMany({ user: userId });
+    await Saved.deleteMany({ user: userId });
+    UploadService.unLinkUserFolderSync(userId);
 
-      await user.deleteOne();
+    await user.deleteOne();
 
-      return true;
-    } catch (error) {
-      console.log(`🚀 ~ UserService ~ deleteUser ~ error:`, error);
-
-      return false;
-    }
+    return true;
   }
 
   async createUser({ role, gender, email, tell, region_code, password, file, file_to, ...rest }: BodyPayload) {

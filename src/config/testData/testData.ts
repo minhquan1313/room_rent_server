@@ -19,24 +19,22 @@ export const testData = {
         const [db, collection, fileType] = fileName.split(".");
         const modelName = this.getModelName(collection);
 
-        // console.log(`🚀 ~ forawait ~ modelName:`, modelName);
-        // console.log(`🚀 ~ forawait ~ collection:`, collection);
-
         if (!modelName) {
           console.error(`modelName not found ${collection}`);
-        } else {
-          if (await mongoose.model(modelName).findOne()) continue;
-
-          const data = JSON.parse(
-            readFileSync(join(dir, fileName), {
-              encoding: "utf-8",
-            })
-          );
-
-          dumpDataObjectIdConvert(data);
-
-          await mongoose.model(modelName).insertMany(data);
+          continue;
         }
+
+        if (await mongoose.model(modelName).findOne()) continue;
+
+        const data = JSON.parse(
+          readFileSync(join(dir, fileName), {
+            encoding: "utf-8",
+          })
+        );
+
+        dumpDataObjectIdConvert(data);
+
+        await mongoose.model(modelName).insertMany(data);
       } catch (error) {
         console.log(`🚀 ~ fileNames.forEach ~ error:`, error);
       }
@@ -44,12 +42,21 @@ export const testData = {
   },
 
   getModelName(collection: string) {
-    switch (collection) {
-      case "roomservicecategories":
-        return "RoomServiceCategory";
+    /**
+     * 'chatmemebers', 'users', ...
+     *
+     * Object.keys(mongoose.models) => names of model mongoose (User)
+     *
+     * mongoose.models["ChatMember"].collection.name => name in collection db (users)
+     */
+    const modelsName = Object.keys(mongoose.models);
 
-      default:
-        return mongoose.modelNames().find((n) => n.toLowerCase() === collection.slice(0, -1).toLowerCase());
+    for (const name of modelsName) {
+      if (mongoose.models[name].collection.name !== collection) continue;
+
+      return name;
     }
+
+    return undefined;
   },
 };

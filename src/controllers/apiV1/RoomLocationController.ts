@@ -1,89 +1,89 @@
 import { errorResponse } from "@/Utils/errorRes";
-import RoomLocationService from "@/services/RoomLocationService";
+import LocationService from "@/services/LocationService";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 class RoomLocationController {
   async getCountries(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getCountries();
+      const results = await LocationService.getCountries();
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getProvinces(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getProvinces({ country: req.query.country });
+      const results = await LocationService.getProvinces({ country: req.query.country });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getDistricts(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getDistricts({ province: req.query.province });
+      const results = await LocationService.getDistricts({ province: req.query.province });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getWards(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getWards({ district: req.query.district });
+      const results = await LocationService.getWards({ district: req.query.district });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getCountriesAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getCountries({ ...req.query, all: true });
+      const results = await LocationService.getCountries({ ...req.query, all: true });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getProvincesAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getProvinces({ ...req.query, all: true });
+      const results = await LocationService.getProvinces({ ...req.query, all: true });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getDistrictsAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getDistricts({ ...req.query, all: true });
+      const results = await LocationService.getDistricts({ ...req.query, all: true });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getWardsAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.getWards({ ...req.query, all: true });
+      const results = await LocationService.getWards({ ...req.query, all: true });
 
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async getResolve(req: Request, res: Response, next: NextFunction) {
     try {
-      const results = await RoomLocationService.resolve(req.query);
+      const results = await LocationService.resolve(req.query);
 
-      // const results = await RoomLocationService.resolve(req.query);
+      // const results = await LocationService.resolve(req.query);
       res.json(results);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 }

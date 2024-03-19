@@ -1,11 +1,16 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 
 class JWTService {
-  sign(data: string | object, options?: SignOptions) {
+  PRIVATE_JWT_KEY: string;
+
+  constructor() {
     const { PRIVATE_JWT_KEY } = process.env;
     if (!PRIVATE_JWT_KEY) throw new Error(`Missing PRIVATE_JWT_KEY`);
+    this.PRIVATE_JWT_KEY = PRIVATE_JWT_KEY;
+  }
 
-    const code = jwt.sign(data, PRIVATE_JWT_KEY, options);
+  sign(data: string | object, options?: SignOptions) {
+    const code = jwt.sign(data, this.PRIVATE_JWT_KEY, options);
 
     return code;
   }
@@ -15,9 +20,7 @@ class JWTService {
    * @returns May throw error, should have a catch(){}
    */
   verify(token: string) {
-    const { PRIVATE_JWT_KEY } = process.env;
-    if (!PRIVATE_JWT_KEY) throw new Error(`Missing PRIVATE_JWT_KEY`);
-    return jwt.verify(token, PRIVATE_JWT_KEY);
+    return jwt.verify(token, this.PRIVATE_JWT_KEY);
   }
 }
 

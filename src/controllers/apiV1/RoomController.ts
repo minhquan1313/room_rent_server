@@ -13,7 +13,7 @@ class RoomController {
 
       res.json(room);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   // /api/v1/rooms/
@@ -23,7 +23,7 @@ class RoomController {
 
       res.json(await RoomService.getAll(query as any));
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 
@@ -48,7 +48,7 @@ class RoomController {
 
       return res.json(await (await Room.findById(roomId))?.populateAll());
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 
@@ -98,7 +98,7 @@ class RoomController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async deleteRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -108,7 +108,7 @@ class RoomController {
       await RoomService.delete(roomId);
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 }

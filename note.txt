@@ -1,0 +1,27 @@
+    windows:
+netstat -aon | findstr /i "listening" | findstr "8080"
+taskkill /F /PID <id>
+taskkill /f /im node*
+
+    linux:
+ps -ef | grep "node"
+    
+    .env:
+DB_URL=mongodb://mongo-server:27017
+
+    dump data(backup):
+docker exec -i mongo-server /usr/bin/mongodump --uri="mongodb://mongo-server:27017/room_rent_dev" --archive > db.dump
+    restore data:
+docker exec -i mongo-server /usr/bin/mongorestore --uri="mongodb://mongo-server:27017/room_rent_dev" --archive < db.dump
+
+    docker:
+docker rm -f room-rent-server mongo-server
+docker rmi -f <image-id>
+docker compose up --build -d
+
+
+Project tạm ngưng, nếu tiếp tục lại, thì bắt đầu dịch error response
+tiếp tục với files
+src\validators\user.ts
+src\constants\errorResponseCode.ts
+src\Utils\errorRes.ts

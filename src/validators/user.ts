@@ -10,10 +10,10 @@ import { check } from "express-validator";
 export const validateUpdateUser = () => {
   return [
     //
-    check("username", "Tên người dùng không được đổi").not().exists(),
+    check("username", "403201").not().exists(),
 
     // check("password", "Mật khẩu 6 kí tự trở lên").optional().isLength({ min: 6 }),
-    check("password", "Mật khẩu cũ không khớp")
+    check("password", "403203")
       .optional()
       .custom((_, { req }) => {
         const { roleTitle } = req as RequestAuthenticate;
@@ -25,7 +25,7 @@ export const validateUpdateUser = () => {
           // if ("old_password" in req.body && req.body.old_password) {
           return true;
         }
-        throw new Error("Thiếu mật khẩu cũ");
+        throw new Error("403204");
       })
       .custom(async (_, { req }) => {
         const { roleTitle, user } = req as RequestAuthenticate;
@@ -38,7 +38,7 @@ export const validateUpdateUser = () => {
         }
       }),
 
-    check("tell", "Số điện thoại đã tồn tại")
+    check("tell", "403202")
       .optional()
       .custom(async (value) => {
         if (value === "") return;
@@ -46,7 +46,7 @@ export const validateUpdateUser = () => {
         if (doc) throw new Error();
       }),
 
-    check("tell", "Số điện thoại không hợp lệ")
+    check("tell", "403205")
       .optional()
       .if(check("region_code").exists())
       .custom(async (value, { req }) => {
@@ -60,14 +60,14 @@ export const validateUpdateUser = () => {
         if (!valid) throw new Error();
       }),
 
-    check("email", "Email không hợp lệ").optional().isEmail(),
-    check("email", "Email đã tồn tại")
+    check("email", "403206").optional().isEmail(),
+    check("email", "403207")
       .optional()
       .custom(async (email) => {
         const doc = await Email.findOne({ email });
         if (doc) throw new Error();
       }),
-    check("role", "Vai trò không cho phép")
+    check("role", "403208")
       .optional()
       .custom(async (v, { req }) => {
         const { roleTitle } = req as RequestAuthenticate;
@@ -79,7 +79,7 @@ export const validateUpdateUser = () => {
         if (!isRoleAdmin(roleTitle)) throw new Error();
 
         const role = await Role.findOne({ title: v });
-        if (!role) throw new Error(`Vai trò không tồn tại`);
+        if (!role) throw new Error("403209");
 
         /**
          * Nếu vai trò sắp bị thay đổi lớn hơn vai trò của người thực hiện thay đổi
@@ -91,16 +91,16 @@ export const validateUpdateUser = () => {
 
 export const validateLoginUser = () => {
   return [
-    check("username", "Tên người dùng không được trống").not().isEmpty(),
-    check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
-
-    check("password", "Mật khẩu không được trống").not().isEmpty(),
+    //
+    check("username", "403210").not().isEmpty(),
+    check("username", "403211").not().contains(" "),
+    check("password", "403212").not().isEmpty(),
   ];
 };
 
 export const validateRegisterUser = () => {
   return [
-    check("role", "Vai trò không cho phép")
+    check("role", "403208")
       .optional()
       .custom(async (v, { req }) => {
         const { roleTitle } = req as RequestAuthenticate;
@@ -130,17 +130,15 @@ export const validateRegisterUser = () => {
         if (roleOrder(roleTitle) > roleOrder(role?.title)) return true;
       }),
 
-    check("username", "Tên người dùng không được trống").not().isEmpty(),
-    // check("username", "Tên người dùng từ 6 kí tự trở lên").isLength({ min: 6 }),
-    check("username", "Tên người dùng không chứa khoảng trắng").not().contains(" "),
-    check("username", "Tên người dùng đã tồn tại")
-      //
-      .custom(async (value, { req }) => {
-        const doc = await User.findOne({ username: req.body.username });
-        if (doc) throw new Error();
-      }),
+    check("username", "403210").not().isEmpty(),
+    // check("username", "403213").isLength({ min: 6 }),
+    check("username", "403211").not().contains(" "),
+    check("username", "403215").custom(async (value, { req }) => {
+      const doc = await User.findOne({ username: req.body.username });
+      if (doc) throw new Error();
+    }),
 
-    check("password", "Mật khẩu không được trống").not().isEmpty(),
+    check("password", "403212").not().isEmpty(),
     // check("password", "Mật khẩu 6 kí tự trở lên").isLength({ min: 6 }),
 
     check("first_name", "Tên không được để trống").not().isEmpty(),

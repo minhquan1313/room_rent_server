@@ -46,8 +46,6 @@ class SmsService {
         .catch((error) => {
           console.log(error.status);
 
-          if (error.status === 404) return rj(`Hãy gửi mã trước khi xác thực!`);
-
           rj(error);
         });
     });

@@ -10,7 +10,7 @@ class RoomServiceCateController {
 
       res.json(doc);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500",error.toString()));
     }
   }
   async patch(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +21,7 @@ class RoomServiceCateController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500",error.toString()));
     }
   }
   async delete(req: Request, res: Response, next: NextFunction) {
@@ -32,7 +32,7 @@ class RoomServiceCateController {
 
       res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500",error.toString()));
     }
   }
   async getAll(req: Request, res: Response, next: NextFunction) {
@@ -41,7 +41,7 @@ class RoomServiceCateController {
 
       res.json(docs);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500",error.toString()));
     }
   }
 }

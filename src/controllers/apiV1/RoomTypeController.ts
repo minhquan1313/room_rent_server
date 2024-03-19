@@ -10,7 +10,7 @@ class RoomTypeController {
 
       res.json(docs);
     } catch (error: any) {
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.FORBIDDEN).json(errorResponse("500", String(error)));
     }
   }
   async patch(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +21,7 @@ class RoomTypeController {
 
       return res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.FORBIDDEN).json(errorResponse("500", String(error)));
     }
   }
   async delete(req: Request, res: Response, next: NextFunction) {
@@ -33,7 +33,7 @@ class RoomTypeController {
 
       return res.status(StatusCodes.OK).json({});
     } catch (error: any) {
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.FORBIDDEN).json(errorResponse("500", String(error)));
     }
   }
   // /api/v1/room-types/
@@ -43,7 +43,7 @@ class RoomTypeController {
 
       res.json(docs);
     } catch (error: any) {
-      return res.status(StatusCodes.FORBIDDEN).json(errorResponse(String(error)));
+      return res.status(StatusCodes.FORBIDDEN).json(errorResponse("500", String(error)));
     }
   }
 }

@@ -9,7 +9,7 @@ export async function ValidateMiddleware(req: Request, res: Response, next: Next
   if (errors.isEmpty()) return next();
 
   // fail
-  res.status(StatusCodes.BAD_REQUEST).json(errorResponse(errors.array()));
+  res.status(StatusCodes.BAD_REQUEST).json(errorResponse("403001", errors.array()));
 }
 export async function ValidateHasUploadFilesMiddleware(req: Request, res: Response, next: NextFunction) {
   const errors = validationResult(req);
@@ -17,5 +17,5 @@ export async function ValidateHasUploadFilesMiddleware(req: Request, res: Respon
 
   // fail
   deleteUploadedTempFile(req);
-  res.status(StatusCodes.BAD_REQUEST).json(errorResponse(errors.array()));
+  res.status(StatusCodes.BAD_REQUEST).json(errorResponse("403001", errors.array()));
 }

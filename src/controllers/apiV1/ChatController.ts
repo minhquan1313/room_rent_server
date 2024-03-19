@@ -17,7 +17,7 @@ class ChatController {
 
       res.json(doc);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async deleteChatRoom(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -33,7 +33,7 @@ class ChatController {
 
       res.status(StatusCodes.NO_CONTENT).send();
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async searchChatBubble(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -49,7 +49,7 @@ class ChatController {
 
       res.json(d);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
   async searchChatRooms(req: RequestAuthenticate, res: Response, next: NextFunction) {
@@ -66,7 +66,7 @@ class ChatController {
       res.json(d);
       // res.status(StatusCodes.NoContent);
     } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse(error.toString()));
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(errorResponse("500", error.toString()));
     }
   }
 }
